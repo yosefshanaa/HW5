@@ -1,6 +1,6 @@
 [model]
 model_id             = "facebook/opt-13b"
-sweep_model_id       = "facebook/opt-1.3b"
+sweep_model_id       = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 small_model_id       = "llama3.2:1b"        # Ollama tag for sanity baseline
 precision            = "fp16"               # fp16 | 8bit | 4bit
 max_new_tokens       = 20
