@@ -62,7 +62,7 @@ def main() -> None:
 
     shards_path = str(Path(cfg.model.layer_shards_path).expanduser())
     record = run_airllm_demo(
-        model_id=cfg.model.model_id,
+        model_id=cfg.model.sweep_model_id,
         shards_path=shards_path,
         token=gk.hf_token(),
         max_new_tokens=cfg.model.max_new_tokens,
