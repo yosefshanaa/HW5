@@ -1,0 +1,17 @@
+{
+  "sanity": {
+    "status": "ok",
+    "model": "llama3.2:1b",
+    "output": "4.",
+    "runtime_s": 0.1744137909845449
+  },
+  "direct_load": {
+    "status": "oom_analytical",
+    "model": "facebook/opt-13b",
+    "error": "torch.cuda.OutOfMemoryError (theoretical): facebook/opt-13b requires ~26 GB in FP16 but only 7.0 GB available (gap = 19.0 GB).  Direct load would exhaust RAM within seconds.",
+    "ram_gb": 19.3,
+    "ram_available_gb": 7.0,
+    "required_fp16_gb": 26.0,
+    "gap_gb": 19.0
+  }
+}
