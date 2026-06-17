@@ -1,0 +1,19 @@
+# Model registry — referenced by config/default.toml and overridable via env.
+
+[giant]
+# The "proof it runs" model — one short generation to demonstrate K1.
+model_id    = "garage-bAInd/Platypus2-70B-instruct"
+size_gb_fp16 = 140.0
+description  = "70B-class instruct; ~140 GB FP16 — far exceeds 18 GB RAM"
+
+[sweep]
+# Smaller-but-still-too-large model used for the full precision sweep + reps.
+# 8B in FP16 = ~16 GB — does not fit in 18 GB once OS overhead is accounted for.
+model_id    = "meta-llama/Meta-Llama-3-8B"
+size_gb_fp16 = 16.0
+description  = "8B instruct — exceeds available RAM in FP16; ideal for AirLLM sweep"
+
+[small_sanity]
+# Runs fine via Ollama — validates the harness before touching big models.
+model_id    = "llama3.2:1b"
+description = "1B param model via Ollama — sanity baseline (fits in RAM)"

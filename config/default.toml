@@ -1,0 +1,25 @@
+[model]
+model_id             = "facebook/opt-13b"
+sweep_model_id       = "facebook/opt-6.7b"
+small_model_id       = "llama3.2:1b"        # Ollama tag for sanity baseline
+precision            = "fp16"               # fp16 | 8bit | 4bit
+max_new_tokens       = 20
+layer_shards_path    = "~/airllm_cache"
+
+[benchmark]
+repetitions          = 3
+seed                 = 42
+num_threads          = 4
+prompt_set           = [
+    "Explain what a transformer is in two sentences.",
+    "What is the capital of France?",
+    "Write a haiku about memory.",
+]
+
+[economics]
+hardware_capex       = 1999.0
+hardware_life_months = 36
+maintenance_monthly  = 10.0
+cloud_gpu_hourly     = 2.50
+in_out_token_ratio   = 0.3
+tokens_per_request   = 500

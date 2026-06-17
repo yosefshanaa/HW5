@@ -1,0 +1,24 @@
+# Economic model parameters — all overridable via .env.
+# Source: prices as of 2026-06-17; update with current rates.
+
+[onprem]
+hardware_capex       = 1999.0   # USD — MacBook Pro M3 Pro (this machine)
+hardware_life_months = 36
+maintenance_monthly  = 10.0     # USD — consumables, time-value placeholder
+cpu_tdp_watts        = 30.0     # M3 Pro SoC typical load TDP
+
+[api]
+# Claude 3 Haiku (comparable quality / speed tier) — Anthropic pricing 2026-06-17
+provider             = "Anthropic Claude 3 Haiku"
+price_in_per_1k      = 0.00025  # USD per 1k input tokens
+price_out_per_1k     = 0.00125  # USD per 1k output tokens
+cache_discount       = 0.90     # prompt cache: 90% discount on cached input tokens
+
+[cloud_gpu]
+# Lambda Labs A10G on-demand 2026-06-17
+provider             = "Lambda Labs A10G"
+hourly_rate          = 0.60     # USD/hr
+
+[workload]
+tokens_per_request   = 500      # total tokens per API call
+in_out_ratio         = 0.40     # fraction that are input tokens

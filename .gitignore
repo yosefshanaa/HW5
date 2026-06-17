@@ -20,6 +20,7 @@ models/
 layer_shards/
 airllm_cache/
 **/airllm_cache/
+~/airllm_cache/
 .cache/
 cache/
 hf_cache/
