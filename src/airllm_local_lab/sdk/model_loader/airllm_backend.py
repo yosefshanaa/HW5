@@ -61,14 +61,32 @@ class AirLLMBackend:
         if self._model is None or self._tokenizer is None:
             raise RuntimeError("Not loaded — call load() first")
 
-        inputs = self._tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=128)
-        input_ids = inputs.input_ids
-
         _LAYER_EVENTS.clear()
         t0 = time.perf_counter()
+
+        # On macOS, AirLLM uses the MLX backend which expects an MLX array input.
+        try:
+            from airllm import AirLLMLlamaMlx  # only importable on macOS
+
+            if isinstance(self._model, AirLLMLlamaMlx):
+                import mlx.core as mx
+
+                token_ids = self._tokenizer.encode(prompt, add_special_tokens=True)
+                x = mx.array([token_ids])
+                output_text = self._model.generate(x, max_new_tokens=max_new_tokens)
+                elapsed = time.perf_counter() - t0
+                out_ids = self._tokenizer.encode(output_text, add_special_tokens=False)
+                num_new = max(1, len(out_ids))
+                log.info("MLX generated %d tokens in %.1f s", num_new, elapsed)
+                return GenerationResult(text=output_text, token_ids=out_ids, num_tokens=num_new)
+        except ImportError:
+            pass
+
+        # Standard PyTorch path (non-macOS / CUDA)
+        inputs = self._tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=128)
+        input_ids = inputs.input_ids
         out = self._model.generate(input_ids, max_new_tokens=max_new_tokens)
         elapsed = time.perf_counter() - t0
-
         text = self._tokenizer.decode(out[0], skip_special_tokens=True)
         num_new = out.shape[1] - input_ids.shape[1]
         log.info("Generated %d tokens in %.1f s (%.3f tok/s)", num_new, elapsed, num_new / elapsed if elapsed else 0)
