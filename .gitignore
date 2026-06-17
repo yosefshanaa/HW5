@@ -1,0 +1,62 @@
+# ───────────────────────── Secrets (NEVER commit) ─────────────────────────
+.env
+.env.*
+!.env-example
+*.key
+*.pem
+*.token
+hf_token*
+secrets/
+
+# ───────────────────────── Models / weights / shards ──────────────────────
+# AirLLM layer shards & downloaded model weights are huge and must never be committed
+models/
+*.safetensors
+*.gguf
+*.bin
+*.pt
+*.pth
+*.onnx
+layer_shards/
+airllm_cache/
+**/airllm_cache/
+.cache/
+cache/
+hf_cache/
+
+# ───────────────────────── Python / uv ────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.egg-info/
+dist/
+build/
+
+# ───────────────────────── Notebooks ──────────────────────────────────────
+.ipynb_checkpoints/
+
+# ───────────────────────── Logs / scratch ─────────────────────────────────
+logs/
+*.log
+tmp/
+scratch/
+
+# ───────────────────────── OS / editor ────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# ───────────────────────── Allowed: keep these tracked ─────────────────────
+# results/ (raw CSV/JSON metrics) and assets/ (generated figures) ARE committed
+# for reproducibility — do NOT ignore them.
