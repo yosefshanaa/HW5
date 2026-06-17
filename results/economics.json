@@ -1,0 +1,57 @@
+{
+  "crossover_tokens": 79580000.0,
+  "crossover_note": "On-Prem cheaper above 79,580,000 tokens/month",
+  "onprem_fixed_monthly": 65.53,
+  "assumptions": [
+    {
+      "parameter": "Hardware CapEx",
+      "value": "$1,999",
+      "source": "MacBook Pro M3 Pro \u2014 this machine"
+    },
+    {
+      "parameter": "Hardware life",
+      "value": "36 months",
+      "source": "assumption"
+    },
+    {
+      "parameter": "Maintenance/mo",
+      "value": "$10.00",
+      "source": "placeholder"
+    },
+    {
+      "parameter": "Electricity rate",
+      "value": "$0.150/kWh",
+      "source": "US avg 2026-06-17"
+    },
+    {
+      "parameter": "Energy/1k tokens",
+      "value": "1.00e-05 kWh",
+      "source": "measured"
+    },
+    {
+      "parameter": "API input price",
+      "value": "$0.00025/1k tok",
+      "source": "Anthropic 2026-06-17"
+    },
+    {
+      "parameter": "API output price",
+      "value": "$0.00125/1k tok",
+      "source": "Anthropic 2026-06-17"
+    },
+    {
+      "parameter": "Cache discount",
+      "value": "50%",
+      "source": "Anthropic Prompt Caching"
+    },
+    {
+      "parameter": "Cache hit rate",
+      "value": "50%",
+      "source": "assumption"
+    },
+    {
+      "parameter": "Input fraction",
+      "value": "40%",
+      "source": "assumption"
+    }
+  ]
+}
