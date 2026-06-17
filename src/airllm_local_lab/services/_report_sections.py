@@ -85,7 +85,7 @@ def section_baseline(b_sanity: dict, b_direct: dict) -> str:
 
 def section_airllm(demo: dict) -> str:
     return (
-        "## 4. AirLLM Integration\n\n"
+        "## 5. AirLLM Integration\n\n"
         "**Mechanism:** AirLLM stores each transformer layer as a `safetensors` shard on disk and streams "
         "them one at a time: load layer → compute hidden state → release → load next. "
         "Peak memory = one layer, not the whole model. The price paid: weights are re-read from disk "

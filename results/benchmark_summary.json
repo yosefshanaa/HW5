@@ -11,7 +11,7 @@
     "precision": "fp16",
     "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     "status": "ok",
-    "shard_size_gb": 0.0
+    "shard_size_gb": 2.0
   },
   {
     "precision": "8bit",

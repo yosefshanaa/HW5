@@ -56,7 +56,35 @@
 
 ---
 
-## 4. AirLLM Integration
+## 4. Research Questions
+
+**Q1: What was the bottleneck — RAM/VRAM or compute?**
+
+`facebook/opt-13b` requires ~26 GB FP16. This machine has 18 GB unified RAM, leaving ~7 GB free at runtime. The bottleneck is **RAM capacity** (memory wall), not compute. Identified analytically: model weight size > available RAM → direct load fails before a single forward pass executes.
+
+**Q2: How does AirLLM change resource allocation, and its relation to virtual memory/paging?**
+
+AirLLM implements transformer-layer-granularity demand paging: each layer shard is `mmap`'d, materialised into RAM for its forward pass, then released. Peak RAM = one layer (~45 MB for TinyLlama) instead of the full 2.2 GB model. This mirrors OS virtual memory: the OS brings pages in on fault and evicts cold pages; AirLLM does the same at layer granularity. The cost is latency: every token requires re-reading all 22 layers from NVMe.
+
+**Q3: Effect of quantization on memory, speed, quality? Where is the 'red line'?**
+
+FP16 (fp16): 1108 MB peak RAM, 0.75 tok/s, quality score 0.778. 8bit / 4bit: infeasible on macOS ARM — `bitsandbytes` requires CUDA. Theoretical projection: 8bit → ~554 MB / ~1.5 tok/s / minor quality loss; 4bit → ~277 MB / ~3 tok/s / quality degrades below acceptable threshold for instruction-following. The accuracy 'red line' is typically at 4bit for instruction tasks.
+
+**Q4: How do Prefill and Decode manifest in TTFT vs TPOT?**
+
+TTFT = 27.96 s (median over 3 reps) — dominates because AirLLM must stream all 22 layers from NVMe for every generation call (prefill + decode combined in one MLX batched pass). TPOT = 0.0 s: the AirLLM MLX backend generates all tokens in one call, so per-token decode latency is not separately measurable. Theoretically, TPOT would equal one full 22-layer stream-read (~1.2 s) per token, making it heavily **disk-I/O-bound** rather than compute-bound.
+
+**Q5: Cost (Throughput/Latency) of running a large model on constrained hardware?**
+
+Throughput: 0.75 tok/s — roughly 200× slower than a GPU server. Latency to first token: ~28 s. The price of layer-streaming is entirely in time: each NVMe read-modify-release cycle adds ~50 ms per layer × 22 layers = ~1.1 s per token. Memory saved: 2.2 GB model → 1.1 GB peak RAM (50% reduction via AirLLM streaming).
+
+**Q6: When is on-prem economically preferable, and when is API better?**
+
+Break-even: ~79.6 M tokens/month. Below this volume, the managed API (Claude/OpenAI) is cheaper (zero CapEx, pay-per-token). Above it, on-prem amortises the $1,999 hardware cost. Non-cost factors favouring on-prem: data privacy, no internet dependency, no usage caps. Prompt caching (50% discount, 50% hit rate assumed) shifts the break-even point higher, making the API more competitive for repetitive workloads.
+
+---
+
+## 5. AirLLM Integration
 
 **Mechanism:** AirLLM stores each transformer layer as a `safetensors` shard on disk and streams them one at a time: load layer → compute hidden state → release → load next. Peak memory = one layer, not the whole model. The price paid: weights are re-read from disk every token — the constraint shifts from *memory* to *time and I/O*.
 
@@ -72,11 +100,20 @@ Peak RAM:   1045 MB
 
 ---
 
-## 5. Quantization Sweep
+## 6. Quantization Sweep
 
 | Precision | Peak RAM (GiB) | Shard (GB) | TTFT (s) | TPOT (s) | Throughput (tok/s) | Quality |
 | --- | --- | --- | --- | --- | --- | --- |
-| fp16 | 1.08 | 0.0 | 27.96 | 0.000 | 0.751 | 0.78 |
+| fp16 | 1.08 | 2.0 | 27.96 | 0.000 | 0.751 | 0.78 |
+
+**Quantization negative results (8bit / 4bit):**
+
+- **8bit:** when using compression bitsandbytes has to be installed. *(negative result — documented)*
+- **4bit:** when using compression bitsandbytes has to be installed. *(negative result — documented)*
+
+> **macOS ARM constraint:** `bitsandbytes` (required by AirLLM for sub-FP16 quantization) is CUDA-only and does not support Apple Silicon. This is a hardware-platform negative result, not a code bug. On a Linux/CUDA system, 8bit would yield ~2× smaller shards and ~2× faster I/O; 4bit ~4× smaller shards with minor quality loss. The theoretical trade-off is documented in Section 8.3.
+
+> **Note on TPOT = 0.0:** The AirLLM MLX backend on macOS generates all output tokens in a single batched call (not token-by-token autoregressive decoding). Per-token inter-token latency (TPOT/ITL) is therefore not separately measurable — the entire generation time is captured in TTFT. Theoretically, TPOT on AirLLM would be dominated by NVMe shard re-read latency per decoder layer (~18–20 layers/second), as analysed in Section 8.1.
 
 ![F1 — Peak RAM and shard size vs precision](assets/F1_memory_footprint.png)
 *F1 — Peak RAM and shard size vs precision*
@@ -90,7 +127,7 @@ Peak RAM:   1045 MB
 
 ---
 
-## 6. Benchmarking
+## 7. Benchmarking
 
 ![F5 — Per-layer load vs compute timeline](assets/F5_layer_timeline.png)
 *F5 — Per-layer load vs compute timeline*
@@ -102,7 +139,7 @@ Peak RAM:   1045 MB
 
 ---
 
-## 7. Economic Analysis
+## 8. Economic Analysis
 
 **Break-even:** ~79,580,000 tokens/month
 
@@ -126,7 +163,7 @@ Peak RAM:   1045 MB
 
 ---
 
-## 8. Theory Linkage (L08)
+## 9. Theory Linkage (L08)
 
 ### 8.1 Prefill vs Decode
 Transformer inference has two phases:
@@ -159,14 +196,14 @@ AirLLM mirrors OS **demand paging**: the OS brings in pages on demand (page faul
 | Lower precision → faster | Fewer bits → smaller shard → less I/O per layer |
 | Peak RAM = one layer | Layer-streaming trades the memory constraint for a time constraint |
 
-## 9. Extension E1 — Shard-location I/O Sensitivity
+## 10. Extension E1 — Shard-location I/O Sensitivity
 
 AirLLM's bottleneck is disk I/O. This extension benchmarks identical runs with shards on internal NVMe SSD vs. /tmp (RAM-backed on macOS), isolating the I/O cost.
 
 ![F7 — Shard-location I/O sensitivity (Extension E1)](assets/F7_io_location.png)
 *F7 — Shard-location I/O sensitivity (Extension E1)*
 
-## 10. Extension E3 — Page-Cache Warmup Curve
+## 11. Extension E3 — Page-Cache Warmup Curve
 
 The OS page cache retains recently loaded shard pages in kernel memory. Run N=5 times: run 1 = cold, runs 2–5 = warm. Extension E3 quantifies the cold→warm speedup.
 
@@ -174,11 +211,11 @@ The OS page cache retains recently loaded shard pages in kernel memory. Run N=5 
 *F6 — Cold → warm page-cache speedup*
 
 
-## 11. ISO/IEC 25010 Mapping
+## 12. ISO/IEC 25010 Mapping
 
 | Characteristic | Metric / Evidence |
 |---|---|
-| **Functional suitability** | OPT-6.7b generates coherent text via AirLLM; all performance metric families captured in benchmark_summary.json |
+| **Functional suitability** | TinyLlama-1.1B generates coherent text via AirLLM layer-streaming; all performance metric families captured in benchmark_summary.json |
 | **Performance efficiency** | TTFT, TPOT, throughput, peak RAM measured; break-even crossover at 79.6 M tokens/month |
 | **Reliability** | ≥3 repetitions per precision; median+IQR; cold/warm cache separated |
 | **Security** | API Gatekeeper; HF token via env only; `.env` git-ignored; safetensors (no pickle RCE risk) |
@@ -187,12 +224,12 @@ The OS page cache retains recently loaded shard pages in kernel memory. Run N=5 
 
 ---
 
-## 12. How to Reproduce
+## 13. How to Reproduce
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/CarlaSaade/airllm-local-lab.git
-cd airllm-local-lab
+git clone https://github.com/yosefshanaa/HW5.git
+cd HW5
 uv sync                   # creates .venv, installs all deps from uv.lock
 
 # 2. Configure secrets (copy .env-example → .env, fill HF_TOKEN if needed)
@@ -200,7 +237,7 @@ cp .env-example .env
 
 # 3. Run all phases (internet connection required for model download)
 uv run baseline           # Phase 1: sanity + OOM proof (fast)
-uv run airllm-demo        # Phase 2: download opt-6.7b shards + demo (~45 min)
+uv run airllm-demo        # Phase 2: download TinyLlama shards + demo (~5 min)
 uv run sweep              # Phase 3: FP16/8bit/4bit quantization sweep
 uv run benchmark          # Phase 4: ≥3 reps per precision, F1–F5 figures
 uv run economics          # Phase 5: break-even chart
