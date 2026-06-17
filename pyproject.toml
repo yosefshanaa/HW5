@@ -19,6 +19,7 @@ dependencies = [
     "protobuf>=4.25.0",
     "mlx>=0.31.2",
     "hf-transfer>=0.1.9",
+    "numpy<2",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,11 @@
+{
+  "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "compression": null,
+  "prompt": "Explain what a transformer is in one sentence.",
+  "output": "A transformer is a device that converts electrical energy from one form (e.g., direct",
+  "num_tokens": 20,
+  "total_s": 36.636,
+  "peak_ram_mb": 1045.3,
+  "peak_vram_mb": 0.0,
+  "throughput_tps": 0.5459
+}
