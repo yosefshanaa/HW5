@@ -1,0 +1,44 @@
+[
+  {
+    "cache_state": "cold",
+    "ttft_s": 27.0988,
+    "tpot_s": 0.0,
+    "throughput_tps": 0.7749,
+    "total_s": 27.099,
+    "peak_ram_mb": 1101.1,
+    "energy_j": 812.963,
+    "quality_normalised": 0.778,
+    "output": "\n\nA transformer is a device that converts electrical energy from one form (e.g",
+    "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "precision": "fp16",
+    "rep": 1
+  },
+  {
+    "cache_state": "warm",
+    "ttft_s": 27.9593,
+    "tpot_s": 0.0,
+    "throughput_tps": 0.7511,
+    "total_s": 27.959,
+    "peak_ram_mb": 1108.5,
+    "energy_j": 838.78,
+    "quality_normalised": 0.778,
+    "output": "\n\nA transformer is a device that converts electrical energy from one form (e.g",
+    "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "precision": "fp16",
+    "rep": 2
+  },
+  {
+    "cache_state": "warm",
+    "ttft_s": 28.37,
+    "tpot_s": 0.0,
+    "throughput_tps": 0.7402,
+    "total_s": 28.37,
+    "peak_ram_mb": 1115.7,
+    "energy_j": 851.099,
+    "quality_normalised": 0.778,
+    "output": "\n\nA transformer is a device that converts electrical energy from one form (e.g",
+    "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "precision": "fp16",
+    "rep": 3
+  }
+]

@@ -25,12 +25,17 @@ PRECISION_MAP = {
 
 
 def _shard_size_gb(shards_path: str, model_id: str) -> float:
-    model_slug = model_id.replace("/", "--")
-    shard_dir = Path(shards_path) / model_slug
-    if not shard_dir.exists():
-        return 0.0
-    total = sum(f.stat().st_size for f in shard_dir.rglob("*") if f.is_file())
-    return round(total / 1e9, 2)
+    base = Path(shards_path).expanduser()
+    candidates = [
+        base / model_id.replace("/", "--"),
+        base / "splitted_model",
+        base,
+    ]
+    for shard_dir in candidates:
+        if shard_dir.exists() and any(shard_dir.iterdir()):
+            total = sum(f.stat().st_size for f in shard_dir.rglob("*") if f.is_file())
+            return round(total / 1e9, 2)
+    return 0.0
 
 
 def run_precision(

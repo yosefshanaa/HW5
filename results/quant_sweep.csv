@@ -1,0 +1,6 @@
+model_id,precision,compression,status,error,output,num_tokens,total_s,peak_ram_mb,shard_size_gb,throughput_tps,quality_normalised
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,fp16,,ok,,"
+
+A transformer is a device that converts electrical energy from one form (e.g",21,27.718,1069.8,0.0,0.7576,0.778
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,8bit,8bit,error,when using compression bitsandbytes has to be installed.,,0,0.174,1069.7,0.0,0,0
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,4bit,4bit,error,when using compression bitsandbytes has to be installed.,,0,0.171,1069.8,0.0,0,0

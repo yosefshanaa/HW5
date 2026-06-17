@@ -1,0 +1,10 @@
+cache_state,ttft_s,tpot_s,throughput_tps,total_s,peak_ram_mb,energy_j,quality_normalised,output,model_id,precision,rep
+cold,27.0988,0.0,0.7749,27.099,1101.1,812.963,0.778,"
+
+A transformer is a device that converts electrical energy from one form (e.g",TinyLlama/TinyLlama-1.1B-Chat-v1.0,fp16,1
+warm,27.9593,0.0,0.7511,27.959,1108.5,838.78,0.778,"
+
+A transformer is a device that converts electrical energy from one form (e.g",TinyLlama/TinyLlama-1.1B-Chat-v1.0,fp16,2
+warm,28.37,0.0,0.7402,28.37,1115.7,851.099,0.778,"
+
+A transformer is a device that converts electrical energy from one form (e.g",TinyLlama/TinyLlama-1.1B-Chat-v1.0,fp16,3
