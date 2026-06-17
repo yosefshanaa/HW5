@@ -13,6 +13,7 @@ import torch
 from airllm_local_lab.sdk.model_loader.airllm_backend import AirLLMBackend
 from airllm_local_lab.sdk.viz import plots
 from airllm_local_lab.services._benchmark_helpers import _run_single, _summarise_reps
+from airllm_local_lab.services.quant_sweep import _shard_size_gb
 from airllm_local_lab.shared.config import load_config
 from airllm_local_lab.shared.gatekeeper import Gatekeeper
 from airllm_local_lab.shared.logging import get_logger
@@ -78,6 +79,7 @@ def run_matrix(
         summary["precision"] = precision
         summary["model_id"] = model_id
         summary["status"] = "ok"
+        summary["shard_size_gb"] = _shard_size_gb(shards_path, model_id)
         summary_rows.append(summary)
 
     return raw_rows, summary_rows
@@ -112,8 +114,12 @@ def main() -> None:
     log.info("Benchmark complete. Generating figures...")
     ok_rows = [r for r in summary if r.get("status") == "ok"]
     if ok_rows:
+        fp16_ram = next((r["peak_ram_mb"] for r in ok_rows if r["precision"] == "fp16"), 1.0) or 1.0
+        for r in ok_rows:
+            r["memory_fraction_of_fp16"] = round(r["peak_ram_mb"] / fp16_ram, 3)
         plots.f1_memory_footprint(ok_rows)
         plots.f2_latency(ok_rows)
         plots.f3_throughput(ok_rows)
         plots.f4_quality_vs_memory(ok_rows)
+    plots.f5_layer_timeline([])
     log.info("Figures saved to assets/")

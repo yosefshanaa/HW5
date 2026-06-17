@@ -18,6 +18,7 @@ dependencies = [
     "sentencepiece>=0.2.0",
     "protobuf>=4.25.0",
     "mlx>=0.31.2",
+    "hf-transfer>=0.1.9",
 ]
 
 [project.optional-dependencies]
@@ -37,6 +38,8 @@ economics    = "airllm_local_lab.services.economic_model:main"
 report       = "airllm_local_lab.services.report_builder:main"
 quality-gate = "airllm_local_lab.shared.quality_gate:main"
 download     = "airllm_local_lab.scripts.download:main"
+ext-io       = "airllm_local_lab.services.extension_e1_io:main"
+ext-pagecache = "airllm_local_lab.services.extension_e3_pagecache:main"
 
 [build-system]
 requires      = ["hatchling"]
