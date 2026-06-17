@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from airllm_local_lab.services._report_theory import section_theory_iso  # noqa: F401
+
 _HW = {
     "CPU": {"spec": "Apple M3 Pro (ARM64, 12-core)", "implication": "No CUDA; MPS available but AirLLM runs CPU mode"},
     "RAM": {"spec": "18 GB unified memory", "implication": "Hard ceiling; 70B FP16 (~140 GB) still exceeds it 7×"},
@@ -42,26 +44,39 @@ def section_models() -> str:
     return (
         "## 2. Model Choice Justification\n\n"
         "| Role | Model | Size FP16 | Rationale |\n|---|---|---|---|\n"
-        "| Giant (proof) | `garage-bAInd/Platypus2-70B-instruct` | ~140 GB | Demonstrably doesn't fit; K1 target |\n"
-        "| Sweep | `meta-llama/Meta-Llama-3-8B` | ~16 GB | Exceeds 18 GB RAM w/ OS overhead; tractable on CPU |\n"
-        "| Sanity baseline | `llama3.2:1b` (Ollama) | <2 GB | Validates harness; fits trivially |"
+        "| OOM proof | `facebook/opt-13b` | ~26 GB | 26 GB > 18 GB RAM → direct load fails analytically |\n"
+        "| AirLLM demo + sweep | `facebook/opt-6.7b` | ~13.4 GB | Exceeds usable RAM after OS overhead; "
+        "tractable via AirLLM layer-streaming on NVMe |\n"
+        "| Sanity baseline | `llama3.2:1b` (Ollama) | <2 GB | Validates harness; fits trivially |\n\n"
+        "**Selection reasoning:** OPT-family models are fully public (no gated access), "
+        "published by Meta under a research license, and available as safetensors shards on HuggingFace. "
+        "OPT-13b at 26 GB FP16 exceeds the 18 GB RAM ceiling by 8 GB — conclusive OOM without downloading. "
+        "OPT-6.7b at 13.4 GB exceeds the ~12 GB of usable RAM (after OS overhead of ~6 GB on M3 Pro) "
+        "and demonstrates AirLLM's real value: making a model that would normally saturate or thrash "
+        "the page file feasible via controlled shard streaming."
     )
 
 
 def section_baseline(b_sanity: dict, b_direct: dict) -> str:
+    gap = b_direct.get("gap_gb", "?")
+    required = b_direct.get("required_fp16_gb", "?")
+    avail = b_direct.get("ram_available_gb", "?")
     return (
         "## 3. Baseline (Evidence of the Problem)\n\n"
         "### 3.1 Small-model sanity baseline\n"
         f"- **Status:** `{b_sanity.get('status', 'not run')}`\n"
         f"- **Output:** `{b_sanity.get('output', '—')[:120]}`\n"
         f"- **Runtime:** {b_sanity.get('runtime_s', 0):.2f} s\n\n"
-        "### 3.2 Direct load of 70B model (expected failure)\n"
+        "### 3.2 Direct load of OPT-13B (expected failure)\n"
         f"- **Status:** `{b_direct.get('status', 'not run')}`\n"
         f"- **Error:** `{str(b_direct.get('error', '—'))[:300]}`\n"
-        f"- **RAM available:** {b_direct.get('ram_gb', 0):.1f} GB\n"
-        "- **Explanation:** A 70B model in FP16 requires ~140 GB of RAM. With 18 GB available "
-        "(and OS/process overhead reducing usable headroom), the direct load exhausts memory immediately "
-        "— the RAM gap is ~122 GB. This is the *Memory Wall* the lecture describes."
+        f"- **RAM available:** {avail} GB  |  **Required (FP16):** {required} GB  |  **Gap:** {gap} GB\n\n"
+        "**Explanation:** `facebook/opt-13b` in FP16 requires ~26 GB. With only ~7 GB available "
+        "(18 GB total minus ~11 GB consumed by macOS, browsers, and running processes), "
+        "a direct HuggingFace load would exhaust physical RAM within seconds — causing the kernel "
+        "to page aggressively, thrashing the NVMe, and making inference infeasibly slow. "
+        "This is the *Memory Wall* the lecture describes: RAM capacity, not compute, is the bottleneck. "
+        "**Analytic proof avoids the 26 GB download** — same conclusion, zero waste."
     )
 
 
@@ -82,29 +97,3 @@ def section_airllm(demo: dict) -> str:
     )
 
 
-def section_theory_iso(f7_md: str, f6_md: str) -> str:
-    return (
-        "## 8. Theory Linkage\n\n"
-        "| Empirical finding | Theoretical mechanism |\n|---|---|\n"
-        "| TTFT is disproportionately long | Prefill is compute-bound (GEMM); builds full KV cache before first token |\n"
-        "| TPOT dominated by I/O, not FLOPs | Decode is memory-bandwidth-bound (GEMV) → AirLLM makes it disk-I/O-bound |\n"
-        "| Warm runs faster than cold | OS page cache retains recently used shard pages (mmap + page-fault mechanics) |\n"
-        "| Lower precision → lower RAM + faster I/O | Fewer bits per weight → smaller shard → less I/O per layer |\n"
-        "| Single-layer peak memory | AirLLM's layer-streaming trades the memory limit for a time limit |\n\n"
-        "## 9. Extension E1 — Shard-location I/O Sensitivity\n\n"
-        "AirLLM's bottleneck is disk I/O. This extension benchmarks identical runs with shards on:\n"
-        "- **Internal NVMe SSD** (~/airllm_cache) — native macOS APFS\n"
-        "- **RAM disk** (/tmp fast path) — for upper-bound comparison\n\n"
-        f"{f7_md}\n"
-        "## 10. Extension E3 — Page-Cache Warmup Curve\n\n"
-        "The OS page cache retains recently loaded shard pages. Extension E3 quantifies the cold→warm speedup.\n\n"
-        f"{f6_md}\n\n"
-        "## 11. ISO/IEC 25010 Mapping\n\n"
-        "| Characteristic | How addressed |\n|---|---|\n"
-        "| Functional suitability | Giant model generates coherent output (K1); all 8 metric families captured (K3) |\n"
-        "| Performance efficiency | Benchmarked TTFT/TPOT/throughput; quantized to reduce per-layer I/O |\n"
-        "| Reliability | ≥3 repetitions; median+IQR; cold/warm cache distinguished |\n"
-        "| Security | Gatekeeper; HF token env-only; `.env` git-ignored; safetensors only |\n"
-        "| Maintainability | TDD ≥85%; Ruff zero violations; ≤150 lines/file; SDK layering |\n"
-        "| Portability | Device-agnostic (CPU/MPS/CUDA detection); uv locked env |"
-    )
