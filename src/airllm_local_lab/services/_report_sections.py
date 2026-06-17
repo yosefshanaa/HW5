@@ -95,5 +95,3 @@ def section_airllm(demo: dict) -> str:
         f"Throughput: {demo.get('throughput_tps', 0):.4f} tok/s\n"
         f"Peak RAM:   {demo.get('peak_ram_mb', 0):.0f} MB\n```"
     )
-
-

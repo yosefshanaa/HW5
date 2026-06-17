@@ -6,13 +6,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[3]
+SRC = ROOT / "src"
 MAX_LINES = 150
 
 
 def _run(cmd: list[str], label: str) -> bool:
     print(f"\n{'=' * 60}\n{label}\n{'=' * 60}")
-    result = subprocess.run(cmd, cwd=SRC.parent)
+    result = subprocess.run(cmd, cwd=ROOT)
     ok = result.returncode == 0
     print(f"→ {'PASS' if ok else 'FAIL'}")
     return ok

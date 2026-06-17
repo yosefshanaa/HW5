@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from airllm_local_lab.sdk.model_loader.base import GenerationResult
 from airllm_local_lab.services.baseline_runner import run_direct_load_attempt, run_small_sanity
 

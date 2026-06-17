@@ -60,7 +60,9 @@ def run_direct_load_attempt(model_id: str, token: str | None) -> dict:
 
     log.info(
         "RAM: total=%.1f GB  available=%.1f GB  OS overhead=%.1f GB",
-        ram_total_gb, ram_avail_gb, os_reserved_gb,
+        ram_total_gb,
+        ram_avail_gb,
+        os_reserved_gb,
     )
     log.info("FP16 footprint of %s: %.1f GB  →  gap = %.1f GB", model_id, required_gb, gap_gb)
 
@@ -83,6 +85,7 @@ def run_direct_load_attempt(model_id: str, token: str | None) -> dict:
 
     # Smaller / unknown model — attempt actual load
     from airllm_local_lab.sdk.model_loader.hf_backend import HFTransformersBackend
+
     backend = HFTransformersBackend(model_id=model_id, token=token)
     try:
         t0 = time.perf_counter()
@@ -90,7 +93,13 @@ def run_direct_load_attempt(model_id: str, token: str | None) -> dict:
         elapsed = time.perf_counter() - t0
         msg = f"Loaded in {elapsed:.1f}s — model fits in RAM"
         log.warning(msg)
-        return {"status": "loaded", "model": model_id, "elapsed_s": elapsed, "note": msg, "ram_gb": round(ram_total_gb, 1)}
+        return {
+            "status": "loaded",
+            "model": model_id,
+            "elapsed_s": elapsed,
+            "note": msg,
+            "ram_gb": round(ram_total_gb, 1),
+        }
     except Exception as exc:
         return {"status": "oom_or_error", "model": model_id, "error": str(exc)[:500], "ram_gb": round(ram_total_gb, 1)}
     finally:
