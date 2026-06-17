@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from airllm_local_lab.sdk.viz._plots_extra import _breakeven_impl, _f6_impl, _f7_impl
 
 matplotlib.use("Agg")
-ASSETS = Path(__file__).resolve().parents[5] / "assets"
+ASSETS = Path(__file__).resolve().parents[4] / "assets"
 
 
 def _save(fig: plt.Figure, name: str) -> Path:

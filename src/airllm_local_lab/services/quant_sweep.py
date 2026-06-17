@@ -15,7 +15,7 @@ from airllm_local_lab.shared.gatekeeper import Gatekeeper
 from airllm_local_lab.shared.logging import get_logger
 
 log = get_logger(__name__)
-RESULTS = Path(__file__).resolve().parents[4] / "results"
+RESULTS = Path(__file__).resolve().parents[3] / "results"
 
 PRECISION_MAP = {
     "fp16": None,

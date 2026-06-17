@@ -15,8 +15,8 @@ from airllm_local_lab.shared.gatekeeper import Gatekeeper
 from airllm_local_lab.shared.logging import get_logger
 
 log = get_logger(__name__)
-RESULTS = Path(__file__).resolve().parents[4] / "results"
-ASSETS = Path(__file__).resolve().parents[4] / "assets"
+RESULTS = Path(__file__).resolve().parents[3] / "results"
+ASSETS = Path(__file__).resolve().parents[3] / "assets"
 
 
 def _energy_from_benchmark(results_dir: Path) -> float:

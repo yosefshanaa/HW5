@@ -18,7 +18,7 @@ from airllm_local_lab.shared.logging import get_logger
 from airllm_local_lab.shared.version import __version__
 
 log = get_logger(__name__)
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[3]
 RESULTS = ROOT / "results"
 ASSETS = ROOT / "assets"
 

@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from airllm_local_lab.sdk.model_loader.base import GenerationResult
 from airllm_local_lab.services.baseline_runner import run_direct_load_attempt, run_small_sanity
 
@@ -9,9 +11,7 @@ from airllm_local_lab.services.baseline_runner import run_direct_load_attempt, r
 def test_run_small_sanity_success():
     mock_result = GenerationResult(text="Four", num_tokens=1)
 
-    with (
-        patch("airllm_local_lab.services.baseline_runner.OllamaBackend") as mock_cls,
-    ):
+    with patch("airllm_local_lab.services.baseline_runner.OllamaBackend") as mock_cls:
         instance = MagicMock()
         instance.generate.return_value = mock_result
         mock_cls.return_value = instance
@@ -34,23 +34,41 @@ def test_run_small_sanity_failure():
     assert "error" in result
 
 
-def test_run_direct_load_attempt_oom():
-    with patch("airllm_local_lab.services.baseline_runner.HFTransformersBackend") as mock_cls:
+def test_run_direct_load_attempt_oom_analytical():
+    """Known large model → analytical OOM without downloading."""
+    result = run_direct_load_attempt("facebook/opt-13b", token=None)
+    assert result["status"] == "oom_analytical"
+    assert result["required_fp16_gb"] == 26.0
+    assert "gap_gb" in result
+
+
+def test_run_direct_load_attempt_oom_hf():
+    """Unknown model falls through to HF load; patches SDK import."""
+    with patch("airllm_local_lab.sdk.model_loader.hf_backend.HFTransformersBackend") as mock_cls:
         instance = MagicMock()
         instance.load.side_effect = MemoryError("OOM")
         mock_cls.return_value = instance
 
-        result = run_direct_load_attempt("huge/model", token=None)
+        result = run_direct_load_attempt("unknown/tiny-model", token=None)
 
     assert result["status"] == "oom_or_error"
     assert "OOM" in result["error"]
 
 
 def test_run_direct_load_attempt_unexpected_success():
-    with patch("airllm_local_lab.services.baseline_runner.HFTransformersBackend") as mock_cls:
+    with patch("airllm_local_lab.sdk.model_loader.hf_backend.HFTransformersBackend") as mock_cls:
         instance = MagicMock()
         mock_cls.return_value = instance
 
         result = run_direct_load_attempt("small/model", token=None)
 
     assert result["status"] == "loaded"
+
+
+def test_run_direct_load_attempt_all_known_models():
+    """All models in the lookup table trigger analytical OOM on this 18-GB machine."""
+    from airllm_local_lab.services.baseline_runner import _MODEL_FP16_GB
+
+    for model_id in _MODEL_FP16_GB:
+        result = run_direct_load_attempt(model_id, token=None)
+        assert result["status"] == "oom_analytical", f"{model_id} should be OOM analytical"

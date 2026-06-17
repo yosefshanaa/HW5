@@ -15,7 +15,7 @@ from airllm_local_lab.shared.logging import get_logger
 
 log = get_logger(__name__)
 
-load_dotenv(dotenv_path=Path(__file__).resolve().parents[4] / ".env", override=False)
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[3] / ".env", override=False)
 
 
 class ConfigError(RuntimeError):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-ASSETS = Path(__file__).resolve().parents[5] / "assets"
+ASSETS = Path(__file__).resolve().parents[4] / "assets"
 
 
 def _md_table(headers: list[str], rows: list[list]) -> str:

@@ -12,7 +12,7 @@ except ImportError:
 
 from pydantic import BaseModel, field_validator
 
-_CONFIG_DIR = Path(__file__).resolve().parents[4] / "config"
+_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
 
 
 class ModelConfig(BaseModel):
