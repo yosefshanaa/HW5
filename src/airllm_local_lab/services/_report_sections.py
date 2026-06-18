@@ -13,7 +13,7 @@ _HW = {
     },
     "Disk": {
         "spec": "460 GiB NVMe (APFS), 193 GiB free",
-        "implication": "Ample for shards; native NVMe faster than WSL2 9p",
+        "implication": "Ample for shards; native NVMe (~7 GB/s rated) holds layer shards",
     },
     "OS": {"spec": "macOS Darwin 25.2 (ARM64)", "implication": "Native NVMe I/O; no cross-OS penalty"},
     "Python": {

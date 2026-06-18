@@ -11,7 +11,7 @@
 
 ## 1. What it is & why
 
-A 70B FP16 model is **~140 GB**; this machine has **7.6 GiB RAM and no CUDA GPU**. Normally impossible. **AirLLM changes the point of view** (Part-C p.3): don't compress the whole model into memory — **change the way the model is *loaded***.
+A 70B FP16 model is **~140 GB**; this machine has **18 GB unified RAM and no CUDA GPU**. Normally impossible. **AirLLM changes the point of view** (Part-C p.3): don't compress the whole model into memory — **change the way the model is *loaded***.
 
 > *"More performance on existing hardware — because the bottleneck is now **time**, not **memory**."* (Part-C p.3)
 
@@ -28,7 +28,7 @@ The weights are stored as **per-layer `safetensors` shards** and read via **`mma
 ## 2. Scope on *this* hardware (critical)
 
 - **No CUDA** → run AirLLM on **CPU** (`device="cpu"`). The "Layer Load → GPU compute → release" cycle becomes "Layer Load → **CPU** compute → release." The systems story is identical; only the compute engine and speed differ.
-- **`/mnt/c` is 9p (slow)** → disk reads are *worse* than native NVMe, so AirLLM's I/O penalty is **amplified**. We deliberately measure this and also test WSL2-native ext4 (`~`) for contrast (extension E1 / ADR-003).
+- **Disk I/O dominates** → AirLLM re-reads weights from disk every token, so the I/O path *is* the bottleneck. We deliberately measure this by comparing shard locations — internal NVMe (`~/airllm_cache`) vs `/tmp` (extension E1 / ADR-003).
 - This is the honest worst case for AirLLM and therefore the most informative.
 
 ---
@@ -102,9 +102,9 @@ def generate(model, tok, prompt, max_new_tokens=32):    # AF-4
 |---|---|
 | 70B CPU per-token time impractical | 70B = single short "it runs" proof; smaller too-large model for the sweep (ADR-002) |
 | Class mismatch on load | mandatory `AutoModel` (AF-1) |
-| `C:` flooded by shards | configurable path off root + dry-run (AF-2, R5) |
+| System root flooded by shards | configurable path off root (`~/airllm_cache`) + dry-run (AF-2, R5) |
 | CUDA-only compression unavailable | FP16 baseline + GGUF/Ollama for quality axis (ADR-004) |
-| Slow 9p I/O skews results | measure both `/mnt/c` and ext4 `~`; report as sensitivity (E1) |
+| Shard I/O location skews results | measure internal NVMe vs `/tmp`; report as sensitivity (E1) |
 
 ## 8. Done when
 Giant model emits coherent output via AirLLM `AutoModel` on CPU with shards on a non-system path, per-layer timeline captured, token never hard-coded — i.e., **KPI K1 met** and feeding the benchmark + theory sections.

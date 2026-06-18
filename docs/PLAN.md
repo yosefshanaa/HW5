@@ -40,7 +40,7 @@ The system is a **reproducible measurement lab**, not a service. It has four lay
 └──────────────────────────────────────────────────────────────────────┘
                               ▲ runs on
 ┌──────────────────────────────────────────────────────────────────────┐
-│  HARDWARE/OS  i5-1235U · 7.6 GiB RAM · no CUDA · /mnt/c (9p) · WSL2    │
+│  HARDWARE/OS  Apple M3 Pro · 18 GB unified RAM · no CUDA · NVMe · macOS │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 

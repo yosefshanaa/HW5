@@ -23,7 +23,7 @@ def section_kpi_scorecard() -> str:
         "| **K6** Theory linkage | 100% findings mapped | "
         "All 5 empirical findings paired with named mechanism in §9 table | **PASS** |\n"
         "| **K7** Engineering bar | Coverage >=85%; Ruff 0; <=150L; 0 secrets | "
-        "88%; 0 violations; all files <=150L; secret scan clean | **PASS** |\n"
+        "89%; 0 violations; all files <=150L; secret scan clean | **PASS** |\n"
         "| **K8** Original extensions | >=1 | "
         "E1 (I/O sensitivity) + E3 (page-cache warmup) = 2 delivered | **PASS** |\n\n"
         "**All 8 KPIs met.** Negative results (8bit/4bit infeasible) documented per AC-9."

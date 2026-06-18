@@ -72,7 +72,7 @@ Keeping these separate lets us still produce a meaningful **quality-degradation 
 |---|---|
 | `bitsandbytes` 8/4-bit needs CUDA → infeasible on CPU | confirm early (QF-4); pivot quality axis to GGUF/Ollama (QF-5) |
 | Q2 output gibberish misread as a bug | Q2 is explicitly validation-only (QF-2); flag expected low quality |
-| Disk blow-up from keeping all precisions' shards | clean shards between levels; record footprint then prune; cache off `C:` |
+| Disk blow-up from keeping all precisions' shards | clean shards between levels; record footprint then prune; cache off the system root |
 | Comparing across two backends (AirLLM vs Ollama) unfairly | keep axes separate (§2); same prompt set + rubric; document backend per cell |
 
 ## 7. Done when

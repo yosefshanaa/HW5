@@ -69,7 +69,7 @@ benchmark_pipeline.run(matrix):
 - **F4** Line: **quality vs precision** overlaid with **memory-saving vs precision** (the trade-off chart).
 - **F5** **Per-layer timeline** (load vs compute) — the I/O-bound visualization (extension E2/E3).
 - **F6** Cold→warm **page-cache speedup** curve (extension E3).
-- **F7** (`/mnt/c` vs ext4 `~`) I/O-location comparison (extension E1).
+- **F7** (internal NVMe vs `/tmp`) I/O-location comparison (extension E1).
 
 ---
 

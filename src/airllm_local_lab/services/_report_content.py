@@ -109,7 +109,7 @@ def section_run_instructions() -> str:
         "uv run ext-pagecache      # Phase 6b: page-cache warmup (F6)\n"
         "uv run report             # Phase 7: regenerate this README\n\n"
         "# 4. Run tests\n"
-        "uv run pytest             # 131 tests, >=88% coverage, ~10 s\n"
+        "uv run pytest             # 153 tests, >=85% coverage (89% measured)\n"
         "```\n\n"
         "**Requirements:** Python 3.12, uv >=0.5, ~15 GB free disk, internet for download.\n\n"
         "**Troubleshooting:**\n\n"

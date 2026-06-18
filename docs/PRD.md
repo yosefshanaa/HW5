@@ -138,7 +138,7 @@ This assignment is a **deep-dive technical report** (the README *is* the report)
 | **NFR-7 Documentation** | `docs/` (this PRD, PLAN, TODO, per-mechanism PRDs); README = the report with embedded figures; Prompt-Engineering / Vibe-Coding log. | All present. |
 | **NFR-8 Quality model** | Map deliverable to **ISO/IEC 25010** characteristics (functional suitability, performance efficiency, reliability, maintainability, security, portability). | Section in report. |
 | **NFR-9 Portability** | Code must not *assume* CUDA; must run CPU-only and detect device at runtime. | Preflight + device-agnostic paths. |
-| **NFR-10 Storage hygiene** | Shards/caches/models are git-ignored and live on a chosen path, never committed, never on `C:` system root. | `.gitignore` + configurable `layer_shards_saving_path`. |
+| **NFR-10 Storage hygiene** | Shards/caches/models are git-ignored and live on a chosen path, never committed, never on the system root. | `.gitignore` + configurable `layer_shards_saving_path`. |
 
 ---
 
@@ -176,13 +176,13 @@ The project is **Done** when **all** hold:
 
 **Hard constraints**
 - **C1** No CUDA GPU → CPU execution; expect long runtimes. Mitigate with tiny `max_new_tokens`, short prompts, and a smaller "giant-relative-to-this-box" model where a 70B run is impractically slow.
-- **C2** 7.6 GiB RAM ceiling → per-layer footprint must stay < available RAM; monitor for OOM; use swap as a safety net but record it.
-- **C3** `/mnt/c` 9p I/O is slow → disk-read times will dominate and be *pessimistic* vs native NVMe; this is acknowledged and analyzed, and a native-Linux-path or alternative cache location is tested if it improves results.
+- **C2** 18 GB unified-memory ceiling (~7 GB free at runtime) → per-layer footprint must stay < available RAM; monitor for OOM; record peak RAM per run.
+- **C3** AirLLM is disk-I/O-bound → shard read times dominate runtime. Shards are kept on the native NVMe (`~/airllm_cache`); Extension E1 measures the I/O-location sensitivity (internal NVMe vs `/tmp`).
 - **C4** Must use `uv`, pinned non-newest Python; Ruff/test/line-limit/secret rules are non-negotiable (submission guidelines).
 - **C5** Gated HF models require accepting a license + a personal token supplied via env only.
 
 **Assumptions**
-- **A1** ≥ ~50 GB free disk can be dedicated to shards for a 70B-class model (we have 237 GB).
+- **A1** ≥ ~50 GB free disk can be dedicated to shards for a 70B-class model (this machine has 193 GiB free).
 - **A2** Network bandwidth is sufficient to download model weights once (large, one-time).
 - **A3** Electricity rate and API $/token will be cited with a date and source in the economic model.
 - **A4** "Giant model" is defined **relative to this hardware**: any model whose full weights exceed ~8 GB RAM qualifies; the headline target is a **70B-class** model, with a documented fallback if 70B CPU runtime is prohibitive.
@@ -196,8 +196,8 @@ The project is **Done** when **all** hold:
 | **R1** | 70B CPU run takes hours/token → can't finish | High | High | Tiny token budgets; single short prompt for the 70B headline; use a smaller giant model (e.g., 13B/8B "too large for 8 GB") for the full sweep; document 70B as a "proof it runs" point. |
 | **R2** | AirLLM quantization needs CUDA/`bitsandbytes` GPU → some bit-widths infeasible | High | Medium | Verify support matrix early; pivot to GGUF-quantized comparisons via Ollama for the precision-vs-quality axis if needed; document honestly (AC-9). |
 | **R3** | Python 3.14 breaks torch/airllm install | High | High | Pin 3.11/3.12 via `uv python pin`; verify with a tiny import test before downloading any model (Part-C p.18). |
-| **R4** | `/mnt/c` I/O makes numbers unrepresentative | Medium | Medium | Also test shards on the WSL2 ext4 home (`~`) and compare; report both; frame as I/O-sensitivity analysis (bonus insight). |
-| **R5** | Disk fills mid-download | Medium | High | `dry-run` + `--include` filters (Part-C p.26); preflight free-space check; configurable cache path off `C:`. |
+| **R4** | Shard I/O location skews numbers | Medium | Medium | Test shards on internal NVMe (`~/airllm_cache`) vs `/tmp` and compare; report both; frame as the E1 I/O-sensitivity analysis (bonus insight). |
+| **R5** | Disk fills mid-download | Medium | High | `dry-run` + `--include` filters (Part-C p.26); preflight free-space check; configurable cache path off the system root. |
 | **R6** | Accidental token/secret commit | Low | Critical | `.gitignore` first commit; gatekeeper; pre-commit secret scan; never print token in logs. |
 | **R7** | Non-deterministic timings | High | Medium | ≥ 3 reps, median+IQR; pin seeds; record cold/warm cache; fix thread counts. |
 | **R8** | Scope creep (treating it as a serving product) | Medium | Medium | NG-1 explicit; keep to report+SDK. |
@@ -207,7 +207,7 @@ The project is **Done** when **all** hold:
 ## 10. Original Extensions (choose ≥ 1; R8-safe)
 
 Candidate extensions, each with a measurable mini-evaluation:
-- **E1 — Shard-location I/O sensitivity study.** Benchmark identical runs with `layer_shards_saving_path` on (a) `/mnt/c` 9p vs (b) WSL2 native ext4, quantifying the I/O-bound penalty. Directly demonstrates "the bottleneck moved from VRAM to I/O" (Part-C p.6/9).
+- **E1 — Shard-location I/O sensitivity study.** Benchmark identical runs with `layer_shards_saving_path` on (a) internal NVMe (`~/airllm_cache`) vs (b) `/tmp`, quantifying the I/O-bound penalty. Directly demonstrates "the bottleneck moved from VRAM to I/O" (Part-C p.6/9).
 - **E2 — Prefetch / overlap experiment.** Measure effect of overlapping next-layer load with current-layer compute (Part-C p.13) — even a simple double-buffer prototype — on TTFT/TPOT.
 - **E3 — Page-cache warmup curve.** Quantify cold→warm speedup across repeated runs to make the OS page cache (Part-B) visible as a measured curve.
 - **E4 — Quality-vs-precision rubric.** Blind-score outputs across precision levels on a fixed prompt set to chart the quality-degradation curve against the memory-savings curve.

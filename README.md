@@ -91,7 +91,7 @@ Eight decisions were formally recorded before implementation:
 | CPU | Apple M3 Pro (ARM64, 12-core) | No CUDA; MPS available but AirLLM runs CPU mode |
 | RAM | 18 GB unified memory | Hard ceiling; 70B FP16 (~140 GB) still exceeds it 7× |
 | GPU | Apple M3 Pro GPU (Metal/MPS) — no NVIDIA CUDA | AirLLM CUDA path unavailable; CPU-only inference |
-| Disk | 460 GiB NVMe (APFS), 193 GiB free | Ample for shards; native NVMe faster than WSL2 9p |
+| Disk | 460 GiB NVMe (APFS), 193 GiB free | Ample for shards; native NVMe (~7 GB/s rated) holds layer shards |
 | OS | macOS Darwin 25.2 (ARM64) | Native NVMe I/O; no cross-OS penalty |
 | Python | 3.12 (pinned via uv) | Satisfies non-newest constraint; torch/airllm wheels available |
 
@@ -383,7 +383,7 @@ The OS page cache retains recently loaded shard pages in kernel memory. This ext
 | **Performance efficiency** | TTFT, TPOT, throughput, peak RAM, energy measured; break-even at 79.6 M tokens/month; roofline I/O ratio 9,000× |
 | **Reliability** | >=3 reps per precision; median+IQR; cold/warm cache separated; CV = 4.5% confirms stable I/O timing |
 | **Security** | API Gatekeeper; HF token via env only; `.env` git-ignored; safetensors (no pickle RCE); TokenRedactFilter |
-| **Maintainability** | TDD 88% coverage; Ruff 0 violations; <=150 lines/file; SDK + Services + Shared layering; 8 ADRs documented |
+| **Maintainability** | TDD 89% coverage; Ruff 0 violations; <=150 lines/file; SDK + Services + Shared layering; 8 ADRs documented |
 | **Portability** | Device-agnostic backend dispatch (CPU/MPS/CUDA); uv lock for reproducible install on any Python 3.12 system |
 
 ---
@@ -488,7 +488,7 @@ All gates must pass before any commit is accepted.
 
 ### 14.1 Test Suite
 
-**131 tests · 88% line coverage · ~10 s runtime**
+**153 tests · 89% line coverage · ~30 s runtime**
 
 | Module group | # tests | Focus area |
 |---|---|---|
@@ -554,7 +554,7 @@ All KPIs defined in [docs/PRD.md](docs/PRD.md) §6.
 | **K4** Repetition rigor | >=3 reps; median+IQR | 3 reps; cold/warm separated; IQR = 1.27 s; CV = 4.5% | **PASS** |
 | **K5** Break-even delivered | Computed + plotted | 79.6 M tokens/month; assumptions table; E_breakeven.png | **PASS** |
 | **K6** Theory linkage | 100% findings mapped | All 5 empirical findings paired with named mechanism in §9 table | **PASS** |
-| **K7** Engineering bar | Coverage >=85%; Ruff 0; <=150L; 0 secrets | 88%; 0 violations; all files <=150L; secret scan clean | **PASS** |
+| **K7** Engineering bar | Coverage >=85%; Ruff 0; <=150L; 0 secrets | 89%; 0 violations; all files <=150L; secret scan clean | **PASS** |
 | **K8** Original extensions | >=1 | E1 (I/O sensitivity) + E3 (page-cache warmup) = 2 delivered | **PASS** |
 
 **All 8 KPIs met.** Negative results (8bit/4bit infeasible) documented per AC-9.
@@ -610,7 +610,7 @@ uv run ext-pagecache      # Phase 6b: page-cache warmup (F6)
 uv run report             # Phase 7: regenerate this README
 
 # 4. Run tests
-uv run pytest             # 131 tests, >=88% coverage, ~10 s
+uv run pytest             # 153 tests, >=85% coverage (89% measured)
 ```
 
 **Requirements:** Python 3.12, uv >=0.5, ~15 GB free disk, internet for download.

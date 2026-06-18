@@ -141,7 +141,7 @@ def section_theory_iso(
         "CV = 4.5% confirms stable I/O timing |\n"
         "| **Security** | API Gatekeeper; HF token via env only; `.env` git-ignored; "
         "safetensors (no pickle RCE); TokenRedactFilter |\n"
-        "| **Maintainability** | TDD 88% coverage; Ruff 0 violations; <=150 lines/file; "
+        "| **Maintainability** | TDD 89% coverage; Ruff 0 violations; <=150 lines/file; "
         "SDK + Services + Shared layering; 8 ADRs documented |\n"
         "| **Portability** | Device-agnostic backend dispatch (CPU/MPS/CUDA); "
         "uv lock for reproducible install on any Python 3.12 system |"

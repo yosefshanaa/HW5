@@ -94,12 +94,12 @@ def section_architecture() -> str:
     )
 
 
-def section_quality_gates(coverage_pct: float = 88.0) -> str:
+def section_quality_gates(coverage_pct: float = 89.0) -> str:
     return (
         "## 14. Engineering Quality Gates\n\n"
         "All gates must pass before any commit is accepted.\n\n"
         "### 14.1 Test Suite\n\n"
-        f"**131 tests · {coverage_pct:.0f}% line coverage · ~10 s runtime**\n\n"
+        f"**153 tests · {coverage_pct:.0f}% line coverage · ~30 s runtime**\n\n"
         "| Module group | # tests | Focus area |\n|---|---|---|\n"
         "| `test_gatekeeper`, `test_config` | 9 | Secrets from env only; config validation |\n"
         "| `test_economics`, `test_economic_model*` | 14 | CAPEX/OPEX, API pricing, break-even |\n"

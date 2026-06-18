@@ -49,7 +49,7 @@
 |---|---|---|---|---|
 | 2.1 | `from airllm import AutoModel` smoke test (before any big download) | ☑ | prints "AirLLM OK" on pinned Python | FR-3, Part-C p18 |
 | 2.2 | `scripts/download.py` with `dry-run` + `--include` filters + free-space guard | ☑ | dry-run lists files/size; aborts if disk insufficient | FR-8, R5, Part-C p26 |
-| 2.3 | `AirLLMBackend` using **`AutoModel.from_pretrained`** + `layer_shards_saving_path` off `C:` root | ☑ | shards written to configured path; class-mismatch avoided | FR-7/8, ADR-003 |
+| 2.3 | `AirLLMBackend` using **`AutoModel.from_pretrained`** + `layer_shards_saving_path` off the system root | ☑ | shards written to configured path; class-mismatch avoided | FR-7/8, ADR-003 |
 | 2.4 | CPU-mode generation, `max_new_tokens=16–32`, short prompt | ☑ | **coherent output produced (K1 met)** | FR-9/10, K1 |
 | 2.5 | Capture per-layer load/compute timeline (instrumentation hook) | ☑ | timeline data persisted for one run | FR-17 |
 | 2.6 | Document AirLLM CPU behavior + any quant-support limits found | ☑ | findings recorded; feeds ADR-004 | FR-10/13 |
@@ -99,7 +99,7 @@
 |---|---|---|---|---|
 | 6.1 | README theory section: Prefill(compute-bound)/Decode(memory-bound), Memory Wall, roofline | ☑ | each empirical finding paired with a mechanism | FR-22, K6 |
 | 6.2 | README: AirLLM converts memory-bound → I/O-bound; `mmap`/page-fault/page-cache | ☑ | explanation references measured per-layer timeline | FR-22 |
-| 6.3 | **Extension E1** — shard-location I/O sensitivity (`/mnt/c` vs ext4 `~`) | ☑ | comparative chart + write-up | §10 E1, ADR-003 |
+| 6.3 | **Extension E1** — shard-location I/O sensitivity (internal NVMe vs `/tmp`) | ☑ | comparative chart + write-up | §10 E1, ADR-003 |
 | 6.4 | **Extension E3** — page-cache cold→warm speedup curve | ☑ | curve chart + write-up | §10 E3, FR-16 |
 | 6.5 | (Optional) E2/E4/E5 if time permits | ⤬ | Not pursued — E1+E3 sufficient; time allocated to quality gate | §10 |
 
@@ -138,5 +138,5 @@
 
 ## Standing reminders (Do / Don't — from exercise + guidelines)
 
-**Do:** uv venv with pinned non-newest Python · start small + start at Q2 · low `max_new_tokens` · ensure disk space (dry-run) · set `layer_shards_saving_path` off `C:` · use AirLLM `AutoModel` · ≥3 reps · cite sources/dates.
+**Do:** uv venv with pinned non-newest Python · start small + start at Q2 · low `max_new_tokens` · ensure disk space (dry-run) · set `layer_shards_saving_path` off the system root · use AirLLM `AutoModel` · ≥3 reps · cite sources/dates.
 **Don't:** ❌ hard-code the HF token or any secret · ❌ ignore economics · ❌ commit shards/models/`.env` · ❌ assume CUDA · ❌ hand-edit numbers into figures · ❌ exceed 150 lines/file · ❌ use pickle artifacts.

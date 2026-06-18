@@ -6,8 +6,8 @@ import pytest
 
 from airllm_local_lab.shared.rate_limiter import (
     RateLimitConfig,
-    RateLimitExceededError,
     RateLimiter,
+    RateLimitExceededError,
     _TokenBucket,
 )
 
