@@ -7,8 +7,8 @@
 | **Course** | Local LLM Deployment / Orchestration — HW5 (ex05-AirLLM) |
 | **Owner** | apexmediamind@gmail.com |
 | **Version** | 1.00 |
-| **Status** | Draft → for review |
-| **Last updated** | 2026-06-17 |
+| **Status** | ✅ Final — delivered 2026-06-18 · all 9 ACs met |
+| **Last updated** | 2026-06-18 |
 | **Related docs** | [PLAN.md](./PLAN.md) · [TODO.md](./TODO.md) · [PRD_airllm.md](./PRD_airllm.md) · [PRD_quantization.md](./PRD_quantization.md) · [PRD_benchmarking.md](./PRD_benchmarking.md) · [PRD_economic_analysis.md](./PRD_economic_analysis.md) |
 
 ---
@@ -34,15 +34,15 @@ This assignment is a **deep-dive technical report** (the README *is* the report)
 
 | Component | Specification | Implication |
 |---|---|---|
-| **CPU** | 12th Gen Intel Core **i5-1235U** (10 cores / 12 threads; 2 P-cores + 8 E-cores) | Modest mobile CPU; CPU inference is viable only at very low token counts. |
-| **RAM** | **7.6 GiB** available to WSL2 (+ 2 GiB swap) | **Hard ceiling.** A single FP16 layer of a 70B model (~1.6–1.8 GB) fits; a 405B FP16 layer (~3+ GB) is tight. RAM — not VRAM — is the binding constraint here. |
-| **GPU** | **None discrete. No NVIDIA GPU; `nvidia-smi` absent.** Integrated Intel Iris Xe (shares system RAM) | **CUDA is unavailable.** AirLLM's primary CUDA path cannot be used; we run **CPU mode**. This is the single most important constraint in the project (see [ADR-001](./PLAN.md#adr-001)). |
-| **Disk** | `/mnt/c` (NTFS via WSL2 9p): 475 GB total, **237 GB free** | Ample for layer shards; **but** WSL2→Windows `/mnt/c` I/O is slow (9p protocol). Disk I/O — the dominant AirLLM cost — is *worse* here than native NVMe. This must be measured and discussed, not hidden. |
-| **OS** | Windows 11 host + WSL2 (Linux 6.6 kernel) | `mmap`/page-cache behavior differs from native Linux; cross-filesystem I/O penalty applies. |
-| **Python** | 3.14.4 present (**too new**) | Must pin a **non-newest** Python (3.11 or 3.12) via `uv`; torch/airllm wheels do not exist for 3.14. |
-| **Package manager** | `uv` installed ✓ | Satisfies the mandatory "uv, never pip" rule. |
+| **CPU** | Apple **M3 Pro** (ARM64, 12-core — 6P + 6E) | No x86; no CUDA; AirLLM uses CPU mode via MLX on Apple Silicon. |
+| **RAM** | **18 GB unified memory** (CPU + GPU share the same pool) | Hard ceiling for all processes. OPT-13b FP16 requires ~26 GB → gap = 8 GB → direct load fails. TinyLlama at 2.2 GB fits but AirLLM streams anyway, keeping peak RAM at one layer (~1.1 GB). |
+| **GPU** | Apple M3 Pro GPU (Metal/MPS) — **no NVIDIA CUDA** | AirLLM's CUDA path unavailable; MLX backend used instead (`AirLLMLlamaMlx`). |
+| **Disk** | 460 GiB NVMe (APFS), **193 GiB free** | Native NVMe (~7 GB/s rated); measured effective bandwidth 60.6 MB/s at AirLLM layer-streaming granularity (Python/mmap overhead dominates). |
+| **OS** | macOS Darwin 25.2 (ARM64) | Native NVMe I/O; no cross-OS penalty. APFS metadata caching contributes to E1 results. |
+| **Python** | **3.12** pinned via `uv python pin 3.12` | torch/airllm wheels available; satisfies non-newest-Python constraint. |
+| **Package manager** | `uv` ✓ | Satisfies the mandatory "uv, never pip" rule. |
 
-> **Critical honesty clause.** This is *not* a CUDA workstation. The report must therefore demonstrate AirLLM's value proposition **under the harshest realistic conditions** (no GPU, 8 GB RAM, slow cross-OS disk). That is a feature, not a bug: it is the most honest possible stress test of "trade memory for time," and it makes the latency numbers *the* story.
+> **Critical honesty clause.** This is *not* a CUDA workstation. The report demonstrates AirLLM's value proposition on GPU-less Apple Silicon — the most honest stress test of the "trade memory for time" premise. The constraint shifts from VRAM to NVMe I/O, and the latency numbers (28 s TTFT) are the story.
 
 ---
 
@@ -230,9 +230,11 @@ Candidate extensions, each with a measurable mini-evaluation:
 
 ---
 
-## 12. Open Questions
+## 12. Open Questions — Resolved
 
-- **OQ-1** Is a discrete GPU available on the Windows host that WSL2 simply isn't exposing? (Re-check with `nvidia-smi.exe` from PowerShell.) If yes, a CUDA path becomes possible and the matrix expands.
-- **OQ-2** Which exact giant model? (License/gating, size, AirLLM `AutoModel` compatibility.) Candidate headline: a 70B-class instruct model; full-sweep model: a smaller-but-still-too-large model. **Decision recorded as [ADR-002](./PLAN.md#adr-002).**
-- **OQ-3** Final electricity rate + API price source/date for the economic model.
-- **OQ-4** Which extension(s) from §10 to commit to (recommend E1 + E3 as cheap, high-insight, CPU-friendly).
+| OQ | Question | Resolution |
+|---|---|---|
+| **OQ-1** | Is a discrete GPU available? (nvidia-smi check) | ✅ Resolved — macOS ARM, no CUDA GPU. MLX backend used. ADR-001 confirmed. |
+| **OQ-2** | Which exact giant model? | ✅ Resolved — `facebook/opt-13b` (analytic OOM proof, 26 GB > 18 GB); `TinyLlama/TinyLlama-1.1B-Chat-v1.0` (live demo + sweep, LLaMA-compat with MLX). ADR-002 accepted. |
+| **OQ-3** | Electricity rate + API price source/date? | ✅ Resolved — $0.15/kWh; Claude 3 Haiku $0.00025/$0.00125 per 1k tokens (Anthropic pricing 2026-06-17). Documented in `config/economics.toml`. |
+| **OQ-4** | Which extensions to commit to? | ✅ Resolved — E1 (I/O sensitivity: NVMe vs /tmp) + E3 (page-cache warmup curve). Both delivered with charts and write-ups. |

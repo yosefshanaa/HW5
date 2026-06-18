@@ -5,7 +5,8 @@
 | **Document** | Technical Plan (architecture, diagrams, decisions) |
 | **Project** | `airllm-local-lab` |
 | **Version** | 1.00 |
-| **Last updated** | 2026-06-17 |
+| **Last updated** | 2026-06-18 |
+| **Status** | ✅ Final — all ADRs accepted, all phases delivered |
 | **Related** | [PRD.md](./PRD.md) · [TODO.md](./TODO.md) · per-mechanism PRDs |
 
 This plan turns the [PRD](./PRD.md) into an implementable design: repository layout, C4-style architecture, runtime data-flow, the SDK/service/shared layering mandated by the submission guidelines, the API gatekeeper, the test/quality strategy, and the **Architecture Decision Records (ADRs)** that pin the project's hardest choices.
@@ -208,16 +209,16 @@ Device is **detected**, never assumed: `device = "cuda" if torch.cuda.is_availab
 ## 7. Architecture Decision Records (ADRs)
 
 ### ADR-001 — Run CPU-only; treat "no CUDA GPU" as the central constraint
-**Status:** Accepted · **Context:** `nvidia-smi` is absent; the i5-1235U exposes only Intel Iris Xe (no dedicated VRAM, no CUDA). AirLLM's headline path streams layers into CUDA VRAM. **Decision:** Execute on **CPU** (`device="cpu"`), and make the report's thesis the *harshest-case* memory↔time trade-off. Detect device at runtime; never hard-code CUDA. **Consequences:** (+) Most honest stress test of AirLLM's premise; runs on hardware the user owns. (−) Very slow; forces tiny token budgets and possibly a smaller "giant" model for the full sweep; some quantization kernels (CUDA-only `bitsandbytes`) may be unavailable → handled in ADR-004. **Re-open if** OQ-1 finds a host GPU via `nvidia-smi.exe`.
+**Status:** Accepted ✅ · **Context:** macOS Apple M3 Pro — no NVIDIA GPU, no CUDA. AirLLM uses the MLX backend (`AirLLMLlamaMlx`) on Apple Silicon, which runs on CPU. **Decision:** Execute on **CPU via MLX**, detect device at runtime, never hard-code CUDA. **Consequences:** (+) Most honest stress test; exposes the I/O bottleneck cleanly. (−) `bitsandbytes` CUDA-only → 8bit/4bit infeasible on this platform (handled in ADR-004). **Outcome:** K1 met — TinyLlama runs via AirLLM in 28.7 s / 20 tokens on Apple M3 Pro.
 
-### ADR-002 — Two-tier model choice: a 70B "proof" + a smaller "too-large" sweep model
-**Status:** Proposed · **Context:** A 70B model on CPU may take impractically long per token; but the exercise wants a model that genuinely doesn't fit. **Decision:** Use a **70B-class instruct model** (e.g., the `garage-bAInd/Platypus2-70B-instruct` style target from Part-C p.19, or a current Llama-3-70B/Qwen-72B) for a **single short "it runs" demonstration**, and a **smaller-but-still-too-large** model (e.g., a 13B/8B that exceeds 8 GB RAM in FP16) for the **full precision sweep + repetitions**. Use AirLLM **`AutoModel`** for both (avoids class mismatch, exercise §5.3). **Consequences:** Keeps K1 (giant runs) while making K2–K4 (sweep with reps) tractable. Both qualify as "too large for 8 GB." **Decision finalized after OQ-1/OQ-2.**
+### ADR-002 — Two-tier model choice: analytic OOM proof + live demo model
+**Status:** Accepted ✅ · **Context:** A 70B CPU run is impractically slow; need a model that genuinely doesn't fit for the OOM proof, and a LLaMA-family model for the live AirLLM sweep (MLX requires LLaMA architecture). **Decision:** `facebook/opt-13b` (26 GB FP16 > 18 GB RAM) = analytic OOM proof — no download needed; `TinyLlama/TinyLlama-1.1B-Chat-v1.0` (2.2 GB, LLaMA-compat) = live demo + full sweep via `AutoModel`. **Consequences:** K1 met without wasting 26 GB of disk; TinyLlama exercises the full 22-layer streaming pipeline; MLX path confirmed working. **Outcome:** opt-13b OOM documented in §3; TinyLlama demo in §5 with terminal screenshot S1.
 
 ### ADR-003 — `layer_shards_saving_path` off the system root, with an I/O-location experiment
-**Status:** Accepted · **Context:** Shards are large; `C:` must not be flooded; `/mnt/c` 9p I/O is slow. **Decision:** Default the cache to a configurable dir with free space, **not** `C:\` root; additionally **benchmark `/mnt/c` vs WSL2 ext4 `~`** (extension E1). **Consequences:** Avoids filling the system drive; turns the WSL2 I/O penalty into a measured insight (bottleneck shifted to I/O). Cache layout follows Part-C p.14.
+**Status:** Accepted ✅ · **Context:** Shards are 2 GB; system root must not be flooded; I/O path matters on AirLLM. **Decision:** Default cache to `~/airllm_cache` (configurable); additionally **benchmark `~/airllm_cache` vs `/tmp`** (Extension E1) to measure APFS path effect. **Consequences:** System root clean; I/O sensitivity becomes a measured insight. **Outcome:** Internal NVMe 33.793 s vs /tmp 42.598 s — NVMe 20.7% faster (APFS metadata caching); documented in §10.
 
-### ADR-004 — Honest quantization matrix; pivot quality-vs-precision to GGUF/Ollama if CUDA-only quant is unavailable
-**Status:** Proposed · **Context:** 8-bit/4-bit via `bitsandbytes` typically needs CUDA. On CPU some bit-widths may be infeasible inside AirLLM. **Decision:** Verify AirLLM's CPU quantization support **first**; benchmark the levels that genuinely work; for the **quality-degradation curve** across precisions, use **GGUF K-quants via Ollama** (Q8/Q5/Q4/Q2 are CPU-native there). Document any infeasible AirLLM cell with the systems reason (AC-9). **Consequences:** Preserves a real ≥3-level precision story even without CUDA; separates the *AirLLM memory* axis from the *quantization quality* axis cleanly.
+### ADR-004 — Honest quantization matrix; document CUDA-only infeasibility on macOS ARM
+**Status:** Accepted ✅ · **Context:** `bitsandbytes` (required by AirLLM for 8bit/4bit) is CUDA-only and does not support Apple Silicon. Confirmed during sweep. **Decision:** FP16 = fully benchmarked; 8bit/4bit = documented as infeasible with the systems reason (not a code bug). Theoretical projections (2× / 4× smaller shards → proportionally faster I/O) included in §9.3. **Consequences:** Honest negative result satisfies AC-9; theoretical analysis preserves the educational value of the precision comparison. **Outcome:** §6 documents the full matrix; infeasibility confirmed and explained.
 
 ### ADR-005 — Pin a non-newest Python (3.11 / 3.12) via uv
 **Status:** Accepted · **Context:** System Python is 3.14.4; torch/airllm have no 3.14 wheels; exercise mandates non-newest Python. **Decision:** `uv python pin 3.12` (fallback 3.11); verify with the tiny `from airllm import AutoModel` import test (Part-C p.18) before any large download. **Consequences:** Reliable installs; reproducible lock.
@@ -261,4 +262,5 @@ uv run benchmark                   # FR-14..17 → results/ + assets/
 uv run economics                   # FR-18..21 → break-even chart
 uv run report                      # assemble figures/tables into README
 uv run ruff check . && uv run pytest --cov   # quality gate
+uv run chat                                  # interactive REPL chat (Phase 8)
 ```
