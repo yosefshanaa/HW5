@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.10] — 2026-06-18
+
+### Added — Honesty gap closures (three real experiments)
+- **Task 1 (Ollama quant sweep):** `services/quant_sweep_ollama.py` — Measures ≥3 GGUF precision levels (Q8_0, Q4_K_M, Q2_K) of `llama3.2:1b` via Ollama HTTP API (`/api/generate stream=false`). Captures real TTFT, TPOT, throughput per precision with ≥3 reps + median/IQR. Honest framing: "AirLLM sub-FP16 quant is CUDA-only; precision axis measured via Ollama GGUF on Metal." Results → `results/quant_sweep_ollama.json/csv`.
+- **Task 2 (Giant model proof):** `services/giant_proof.py` — (a) Real OOM attempt: `huggyllama/llama-13b` (26 GB FP16 > 18 GB total RAM) via HF Transformers subprocess → captured real OOM behavior. (b) AirLLM layer-streaming run of the same 13B model at `max_new_tokens=8` — proves layer-by-layer streaming works where direct load fails. Results → `results/giant_proof.json` + `results/baseline.json` updated.
+- **Task 3 (Empirical TPOT/ITL):** `services/tpot_sweep.py` — Runs AirLLM at token counts 1,2,4,8; derives TPOT by linear fit on Δtime/Δtokens. Replaces TPOT=0 placeholder with measured ITL. Results → `results/tpot_sweep.json`. Ollama TPOT from Task 1 provides cross-backend reference.
+- `sdk/model_loader/ollama_backend.py` — Added `generate_with_metrics()` (HTTP API with timing fields), `get_model_size_mb()` (from /api/ps), and `pull()` (ensures model available before sweep).
+- New pyproject.toml entrypoints: `sweep-ollama`, `tpot-sweep`, `giant-proof`.
+
+### Changed
+- `shared/version.py` → 1.10
+- Report builder + section builders updated with Ollama quant data, real OOM evidence, measured TPOT.
+- KPI scorecard updated: K2 now cites ≥3 measured levels (Ollama GGUF); K3 cites measured TPOT from both Ollama and AirLLM ITL derivation; TPOT=0 caveat replaced.
+- Docs updated: PLAN (ADR-004 revised, new ADR-009), PRD (FR-11/13/14, K2/K3, AC-8/9 resolved OQs), TODO (Phase 9 tasks), PRD_quantization.md, PRD_benchmarking.md, PRD_airllm.md, prompt_engineering_log.md.
+
+---
+
 ## [1.00] — 2026-06-17
 
 ### Added

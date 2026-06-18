@@ -1,0 +1,60 @@
+{
+  "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "backend": "airllm_mlx",
+  "prompt": "Explain what a transformer is.",
+  "token_counts": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "measurements": [
+    {
+      "max_new_tokens": 1,
+      "times_s": [
+        2.701,
+        1.647,
+        1.533
+      ],
+      "median_s": 1.647,
+      "min_s": 1.533,
+      "max_s": 2.701
+    },
+    {
+      "max_new_tokens": 2,
+      "times_s": [
+        2.664,
+        2.492,
+        3.008
+      ],
+      "median_s": 2.664,
+      "min_s": 2.492,
+      "max_s": 3.008
+    },
+    {
+      "max_new_tokens": 4,
+      "times_s": [
+        6.185,
+        5.315,
+        5.498
+      ],
+      "median_s": 5.498,
+      "min_s": 5.315,
+      "max_s": 6.185
+    },
+    {
+      "max_new_tokens": 8,
+      "times_s": [
+        11.529,
+        10.24,
+        11.419
+      ],
+      "median_s": 11.419,
+      "min_s": 10.24,
+      "max_s": 11.529
+    }
+  ],
+  "tpot_ms_linear_fit": 1416.14,
+  "base_overhead_s": -0.004,
+  "note": "TPOT estimated by linear fit: time(n) = base_overhead + tpot*n. AirLLM MLX batches, so this measures the per-token marginal cost of layer-streaming on NVMe (I/O-bound)."
+}

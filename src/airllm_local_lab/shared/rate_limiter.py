@@ -87,10 +87,7 @@ class RateLimiter:
             RateLimitExceededError: If the per-minute request quota is exhausted.
         """
         if requested_tokens > self._cfg.max_tokens_per_request:
-            raise ValueError(
-                f"Requested {requested_tokens} tokens exceeds cap of "
-                f"{self._cfg.max_tokens_per_request}"
-            )
+            raise ValueError(f"Requested {requested_tokens} tokens exceeds cap of {self._cfg.max_tokens_per_request}")
         if not self._bucket.consume():
             raise RateLimitExceededError(self._cfg.retry_after_seconds)
         self._queue.append(time.monotonic())

@@ -35,12 +35,33 @@ def test_section_raw_benchmark_empty_returns_blank():
 
 def test_section_raw_benchmark_with_rows_computes_stats():
     rows = [
-        {"rep": 1, "cache_state": "cold", "ttft_s": 27.099, "throughput_tps": 0.7749,
-         "peak_ram_mb": 1101.1, "energy_j": 813.0, "quality_normalised": 0.778},
-        {"rep": 2, "cache_state": "warm", "ttft_s": 27.959, "throughput_tps": 0.7511,
-         "peak_ram_mb": 1108.5, "energy_j": 838.8, "quality_normalised": 0.778},
-        {"rep": 3, "cache_state": "warm", "ttft_s": 28.370, "throughput_tps": 0.7402,
-         "peak_ram_mb": 1115.7, "energy_j": 851.1, "quality_normalised": 0.778},
+        {
+            "rep": 1,
+            "cache_state": "cold",
+            "ttft_s": 27.099,
+            "throughput_tps": 0.7749,
+            "peak_ram_mb": 1101.1,
+            "energy_j": 813.0,
+            "quality_normalised": 0.778,
+        },
+        {
+            "rep": 2,
+            "cache_state": "warm",
+            "ttft_s": 27.959,
+            "throughput_tps": 0.7511,
+            "peak_ram_mb": 1108.5,
+            "energy_j": 838.8,
+            "quality_normalised": 0.778,
+        },
+        {
+            "rep": 3,
+            "cache_state": "warm",
+            "ttft_s": 28.370,
+            "throughput_tps": 0.7402,
+            "peak_ram_mb": 1115.7,
+            "energy_j": 851.1,
+            "quality_normalised": 0.778,
+        },
     ]
     md = section_raw_benchmark(rows)
     assert "Raw Benchmark Data" in md

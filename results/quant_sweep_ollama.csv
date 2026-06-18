@@ -1,0 +1,4 @@
+backend,model_tag,precision,status,reps,ttft_median_s,tpot_median_s,throughput_median_tps,quality_normalised,peak_ram_mb,shard_size_gb
+ollama,llama3.2:1b-instruct-q8_0,Q8_0,ok,3,0.0149,0.010854,92.132,0.778,1510.4,1.475
+ollama,llama3.2:1b-instruct-q4_K_M,Q4_K_M,ok,3,0.0143,0.007518,133.007,0.778,997.0,0.974
+ollama,llama3.2:1b-instruct-q2_K,Q2_K,ok,3,0.0127,0.006919,144.526,0.667,770.2,0.752

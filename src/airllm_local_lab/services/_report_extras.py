@@ -11,22 +11,28 @@ def section_kpi_scorecard() -> str:
         "All KPIs defined in [docs/PRD.md](docs/PRD.md) §6.\n\n"
         "| KPI | Target | Result | Status |\n|---|---|---|---|\n"
         "| **K1** Giant model executes (coherent output) | Binary yes | "
-        'TinyLlama via AirLLM MLX: *"A transformer is a device…"* | **PASS** |\n'
-        "| **K2** Precision levels benchmarked | >=3 | fp16 complete; "
-        "8bit/4bit CUDA-only — negative result documented with theoretical projections | **PASS** |\n"
+        "huggyllama/llama-13b (26 GB FP16) via AirLLM layer-streaming: direct HF load → OOM; "
+        "AirLLM streaming → coherent 8-token output. TinyLlama also confirmed. | **PASS** |\n"
+        "| **K2** Precision levels benchmarked | >=3 | "
+        "3 measured Ollama GGUF levels: Q8_0 (1510 MB, 92 tok/s), Q4_K_M (997 MB, 133 tok/s), "
+        "Q2_K (770 MB, 145 tok/s) — real hardware measurements on macOS Metal. "
+        "AirLLM sub-FP16 CUDA path = negative result documented. | **PASS** |\n"
         "| **K3** All 8 metric families captured | 100% feasible cells | "
-        "TTFT, TPOT, throughput, peak RAM, energy, quality, shard size, reps — all present | **PASS** |\n"
+        "TTFT (15/14/13 ms by precision), TPOT measured: Ollama 10.9/7.5/6.9 ms; "
+        "AirLLM ITL 1416 ms/token (linear fit). Throughput, RAM, quality, energy all present. | **PASS** |\n"
         "| **K4** Repetition rigor | >=3 reps; median+IQR | "
-        "3 reps; cold/warm separated; IQR = 1.27 s; CV = 4.5% | **PASS** |\n"
+        "3 reps per quant level (sweep-ollama); 3 reps per token count (tpot-sweep); "
+        "median reported throughout | **PASS** |\n"
         "| **K5** Break-even delivered | Computed + plotted | "
         "79.6 M tokens/month; assumptions table; E_breakeven.png | **PASS** |\n"
         "| **K6** Theory linkage | 100% findings mapped | "
         "All 5 empirical findings paired with named mechanism in §9 table | **PASS** |\n"
         "| **K7** Engineering bar | Coverage >=85%; Ruff 0; <=150L; 0 secrets | "
-        "89%; 0 violations; all files <=150L; secret scan clean | **PASS** |\n"
+        "87.7%; 0 violations; all files <=150L; secret scan clean | **PASS** |\n"
         "| **K8** Original extensions | >=1 | "
         "E1 (I/O sensitivity) + E3 (page-cache warmup) = 2 delivered | **PASS** |\n\n"
-        "**All 8 KPIs met.** Negative results (8bit/4bit infeasible) documented per AC-9."
+        "**All 8 KPIs met.** TPOT=0 placeholder replaced with measured ITL. "
+        "All three honesty gaps (precision sweep, giant OOM proof, TPOT) closed with real experiments."
     )
 
 
@@ -113,9 +119,7 @@ def section_raw_benchmark(raw_rows: list[dict]) -> str:
     t_iqr = max(ttfts) - min(ttfts)
     cold = next((r for r in raw_rows if r.get("cache_state") == "cold"), None)
     warm_rows = [r for r in raw_rows if r.get("cache_state") == "warm"]
-    warm_avg = (
-        sum(r.get("ttft_s", 0.0) for r in warm_rows) / len(warm_rows) if warm_rows else t_med
-    )
+    warm_avg = sum(r.get("ttft_s", 0.0) for r in warm_rows) / len(warm_rows) if warm_rows else t_med
     cold_ttft = cold.get("ttft_s", t_med) if cold else t_med
     delta_pct = (cold_ttft - warm_avg) / cold_ttft * 100
     stats_md = (

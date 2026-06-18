@@ -41,3 +41,17 @@ def hardware_table(hw: dict) -> str:
     headers = ["Component", "Specification", "Implication"]
     rows = [[k, v["spec"], v["implication"]] for k, v in hw.items()]
     return _md_table(headers, rows)
+
+
+def ollama_quant_table(ollama_rows: list[dict]) -> str:
+    if not ollama_rows:
+        return "*Ollama quant sweep not yet run.*"
+    lines = ["| Precision | Backend | TTFT (ms) | TPOT (ms) | Throughput (tok/s) | RAM (MB) | Quality |"]
+    lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+    for r in ollama_rows:
+        lines.append(
+            f"| {r['precision']} | Ollama/GGUF | {r.get('ttft_median_s', 0) * 1000:.0f} "
+            f"| {r.get('tpot_median_s', 0) * 1000:.1f} | {r.get('throughput_median_tps', 0):.1f} "
+            f"| {r.get('peak_ram_mb', 0):.0f} | {r.get('quality_normalised', 0):.3f} |"
+        )
+    return "\n".join(lines)

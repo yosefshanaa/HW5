@@ -124,7 +124,7 @@ def section_run_instructions() -> str:
         "![S2 — Chat session opening turn](assets/S2_chat_intro.png)\n\n"
         "*S2 — Opening turn of `uv run chat`. The banner confirms the model, the token budget "
         "(50 tokens ≈ ~70 s per reply), and the available commands (`/tokens N`, `/clear`, `/quit`). "
-        "The user sends \"hi my name is yosef\" and the model responds after streaming all 22 layers. "
+        'The user sends "hi my name is yosef" and the model responds after streaming all 22 layers. '
         "The stacked progress bars visualise each layer being loaded from NVMe in sequence — "
         "this is AirLLM's mmap demand-paging at transformer-layer granularity, live.*\n\n"
         "![S3 — Multi-turn chat: AI in healthcare](assets/S3_chat_healthcare.png)\n\n"

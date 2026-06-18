@@ -4,7 +4,7 @@
 |---|---|
 | **Document** | Technical Plan (architecture, diagrams, decisions) |
 | **Project** | `airllm-local-lab` |
-| **Version** | 1.00 |
+| **Version** | 1.10 |
 | **Last updated** | 2026-06-18 |
 | **Status** | ✅ Final — all ADRs accepted, all phases delivered |
 | **Related** | [PRD.md](./PRD.md) · [TODO.md](./TODO.md) · per-mechanism PRDs |
@@ -211,14 +211,17 @@ Device is **detected**, never assumed: `device = "cuda" if torch.cuda.is_availab
 ### ADR-001 — Run CPU-only; treat "no CUDA GPU" as the central constraint
 **Status:** Accepted ✅ · **Context:** macOS Apple M3 Pro — no NVIDIA GPU, no CUDA. AirLLM uses the MLX backend (`AirLLMLlamaMlx`) on Apple Silicon, which runs on CPU. **Decision:** Execute on **CPU via MLX**, detect device at runtime, never hard-code CUDA. **Consequences:** (+) Most honest stress test; exposes the I/O bottleneck cleanly. (−) `bitsandbytes` CUDA-only → 8bit/4bit infeasible on this platform (handled in ADR-004). **Outcome:** K1 met — TinyLlama runs via AirLLM in 28.7 s / 20 tokens on Apple M3 Pro.
 
-### ADR-002 — Two-tier model choice: analytic OOM proof + live demo model
-**Status:** Accepted ✅ · **Context:** A 70B CPU run is impractically slow; need a model that genuinely doesn't fit for the OOM proof, and a LLaMA-family model for the live AirLLM sweep (MLX requires LLaMA architecture). **Decision:** `facebook/opt-13b` (26 GB FP16 > 18 GB RAM) = analytic OOM proof — no download needed; `TinyLlama/TinyLlama-1.1B-Chat-v1.0` (2.2 GB, LLaMA-compat) = live demo + full sweep via `AutoModel`. **Consequences:** K1 met without wasting 26 GB of disk; TinyLlama exercises the full 22-layer streaming pipeline; MLX path confirmed working. **Outcome:** opt-13b OOM documented in §3; TinyLlama demo in §5 with terminal screenshot S1.
+### ADR-002 — Three-tier model choice: real OOM proof + AirLLM demo + Ollama precision sweep
+**Status:** Revised (v1.10) ✅ · **Context:** Original v1.00 used `facebook/opt-13b` as an *analytic* OOM proof (no download). Honesty review required a *real* OOM measurement. **Decision (v1.10):** `huggyllama/llama-13b` (26.03 GB FP16, Apache-2.0, safetensors, ungated) = real OOM attempt via HF Transformers subprocess + AirLLM layer-streaming proof; `TinyLlama/TinyLlama-1.1B-Chat-v1.0` (2.2 GB, LLaMA-compat) = AirLLM TPOT sweep; `llama3.2:1b` Q8_0/Q4_K_M/Q2_K via Ollama = quantization precision sweep. **Why huggyllama:** opt-13b uses OPT architecture (incompatible with AirLLM MLX); openlm-research/open_llama_13b is pickle-only (ADR-007 violation); huggyllama is LLaMA-family, safetensors-native, Apache-2.0, ungated. **Outcome:** Real OOM in §3; AirLLM 13B streaming in §5b; precision sweep in §6.
 
 ### ADR-003 — `layer_shards_saving_path` off the system root, with an I/O-location experiment
 **Status:** Accepted ✅ · **Context:** Shards are 2 GB; system root must not be flooded; I/O path matters on AirLLM. **Decision:** Default cache to `~/airllm_cache` (configurable); additionally **benchmark `~/airllm_cache` vs `/tmp`** (Extension E1) to measure APFS path effect. **Consequences:** System root clean; I/O sensitivity becomes a measured insight. **Outcome:** Internal NVMe 33.793 s vs /tmp 42.598 s — NVMe 20.7% faster (APFS metadata caching); documented in §10.
 
-### ADR-004 — Honest quantization matrix; document CUDA-only infeasibility on macOS ARM
-**Status:** Accepted ✅ · **Context:** `bitsandbytes` (required by AirLLM for 8bit/4bit) is CUDA-only and does not support Apple Silicon. Confirmed during sweep. **Decision:** FP16 = fully benchmarked; 8bit/4bit = documented as infeasible with the systems reason (not a code bug). Theoretical projections (2× / 4× smaller shards → proportionally faster I/O) included in §9.3. **Consequences:** Honest negative result satisfies AC-9; theoretical analysis preserves the educational value of the precision comparison. **Outcome:** §6 documents the full matrix; infeasibility confirmed and explained.
+### ADR-004 — Quantization: Ollama GGUF for real measurements; AirLLM sub-FP16 CUDA-only negative result
+**Status:** Revised (v1.10) ✅ · **Context:** v1.00 documented AirLLM 8bit/4bit as infeasible (bitsandbytes CUDA-only) with no measured alternative. Honesty review required ≥3 real precision measurements. **Decision (v1.10):** Use Ollama GGUF to measure Q8_0, Q4_K_M, Q2_K on `llama3.2:1b` via HTTP API (`/api/generate stream=false`) — real TTFT, TPOT, throughput, quality on macOS Metal. AirLLM sub-FP16 = documented negative result (CUDA-only constraint). **Outcome:** Q8_0=92 tok/s, Q4_K_M=133 tok/s, Q2_K=145 tok/s measured. TPOT=0 placeholder replaced with real values: Ollama 10.9/7.5/6.9 ms; AirLLM ITL 1416 ms/token (linear fit). Results in `results/quant_sweep_ollama.json`.
+
+### ADR-009 — Empirical TPOT/ITL via AirLLM token-count sweep
+**Status:** Accepted (v1.10) ✅ · **Context:** AirLLM MLX batches tokens, making per-token ITL non-trivially observable. v1.00 reported TPOT=0.0 as placeholder. **Decision:** Run TinyLlama at max_new_tokens ∈ {1,2,4,8} (3 reps each); measure wall time; fit linear model `time = base + tpot * n`; extract tpot_ms from slope. **Consequences:** Replaces fabricated 0.0 with empirically grounded 1416 ms/token. The ≈1.4 s/token latency matches the theoretical expectation (22 layers × NVMe read ≈ 50 ms/layer = 1.1 s/pass). **Outcome:** `results/tpot_sweep.json`; K3 fully satisfied.
 
 ### ADR-005 — Pin a non-newest Python (3.11 / 3.12) via uv
 **Status:** Accepted · **Context:** System Python is 3.14.4; torch/airllm have no 3.14 wheels; exercise mandates non-newest Python. **Decision:** `uv python pin 3.12` (fallback 3.11); verify with the tiny `from airllm import AutoModel` import test (Part-C p.18) before any large download. **Consequences:** Reliable installs; reproducible lock.

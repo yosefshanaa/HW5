@@ -76,10 +76,10 @@ def test_chat_loop_full_session(capsys):
 
     out = capsys.readouterr().out
     assert "Model ready" in out
-    assert "max tokens set to 10" in out      # /tokens valid branch
-    assert "Usage: /tokens" in out            # /tokens invalid branch
-    assert "conversation cleared" in out      # /clear branch
-    assert "hi there" in out                  # generated + template-stripped reply
+    assert "max tokens set to 10" in out  # /tokens valid branch
+    assert "Usage: /tokens" in out  # /tokens invalid branch
+    assert "conversation cleared" in out  # /clear branch
+    assert "hi there" in out  # generated + template-stripped reply
     backend.load.assert_called_once()
     backend.generate.assert_called_once()
     backend.unload.assert_called_once()

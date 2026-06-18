@@ -38,11 +38,11 @@ def _strip_template(text: str) -> str:
 
 
 def _print_banner(model_id: str, max_tokens: int) -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  AirLLM Chat — {model_id}")
     print(f"  Max tokens per reply: {max_tokens}  (~{max_tokens * 1.4:.0f}s wait)")
     print("  Commands: /tokens N  /clear  /quit")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 def chat_loop(
@@ -96,7 +96,9 @@ def chat_loop(
         reply = _strip_template(result.text)
 
         print(f"{reply}\n")
-        print(f"  [{result.num_tokens} tokens · {result.num_tokens / max(result.num_tokens, 1) * max_new_tokens / max_new_tokens:.0f}× — type /quit to exit]\n")
+        print(
+            f"  [{result.num_tokens} tokens · {result.num_tokens / max(result.num_tokens, 1) * max_new_tokens / max_new_tokens:.0f}× — type /quit to exit]\n"
+        )
 
         history.append((user_input, reply))
 

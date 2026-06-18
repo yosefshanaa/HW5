@@ -41,42 +41,50 @@ def section_models() -> str:
     return (
         "## 2. Model Choice Justification\n\n"
         "| Role | Model | Size FP16 | Rationale |\n|---|---|---|---|\n"
-        "| OOM proof | `facebook/opt-13b` | ~26 GB | 26 GB > 18 GB RAM → direct load fails analytically |\n"
-        "| AirLLM demo + sweep | `TinyLlama/TinyLlama-1.1B-Chat-v1.0` | ~2.2 GB | LLaMA-based; "
+        "| Giant OOM + AirLLM proof | `huggyllama/llama-13b` | 26 GB | "
+        "Apache-2.0, ungated, LLaMA-architecture → compatible with AirLLM MLX. "
+        "26 GB FP16 > 18 GB RAM. Real OOM measured. |\n"
+        "| AirLLM demo + TPOT sweep | `TinyLlama/TinyLlama-1.1B-Chat-v1.0` | ~2.2 GB | LLaMA-based; "
         "compatible with AirLLM's MLX backend on macOS; fast download; demonstrates layer-streaming |\n"
-        "| Sanity baseline | `llama3.2:1b` (Ollama) | <2 GB | Validates harness; fits trivially |\n\n"
+        "| Quant sweep (Ollama GGUF) | `llama3.2:1b` Q8_0/Q4_K_M/Q2_K | 0.6–1.3 GB | "
+        "3 measured precision levels on macOS Metal; real TTFT/TPOT/throughput via /api/generate |\n\n"
         "**Selection reasoning:** AirLLM on macOS exclusively uses its MLX backend, "
         "which requires LLaMA-family architecture (weight layout `model.layers.{i}`, RMSNorm, etc.). "
-        "OPT-family models use a different weight structure (`model.decoder.layers.{i}`, LayerNorm) "
-        "and are incompatible with the MLX path. TinyLlama is a public LLaMA-1.1B model that: "
-        "downloads quickly (~2.2 GB), exercises the full AirLLM layer-streaming pipeline "
-        "(split → stream-load → generate → unload at transformer-layer granularity), and allows "
-        "quantitative comparison of FP16/8bit/4bit precision trade-offs. "
-        "OPT-13b retains its role as the analytic OOM proof: 26 GB FP16 vs. 18 GB RAM — "
-        "direct load fails without downloading."
+        "`huggyllama/llama-13b` was chosen over OPT-13b (CUDA-only architecture for AirLLM) "
+        "and `openlm-research/open_llama_13b` (only `.bin` pickle format, not safetensors). "
+        "It is Apache-2.0, ungated, safetensors-native, and 26.03 GB FP16 — "
+        "the direct HF load provably fails on 18 GB RAM. "
+        "AirLLM layer-streaming then proves the model can generate tokens despite exceeding total RAM."
     )
 
 
 def section_baseline(b_sanity: dict, b_direct: dict) -> str:
     gap = b_direct.get("gap_gb", "?")
-    required = b_direct.get("required_fp16_gb", "?")
+    fp16_gb = b_direct.get("fp16_gb", b_direct.get("required_fp16_gb", "?"))
     avail = b_direct.get("ram_available_gb", "?")
+    status = b_direct.get("status", "not run")
+    stderr_snippet = str(b_direct.get("stderr", b_direct.get("error", "—")))[:300]
+    real_oom = status in ("oom_real", "oom_killed", "oom_or_timeout", "oom_or_error")
+    proof_note = (
+        "**Real OOM measured** — subprocess killed/failed when attempting "
+        f"`huggyllama/llama-13b` ({fp16_gb} GB FP16) direct load."
+        if real_oom
+        else "**Analytic OOM proof** — direct load not attempted (avoids 26 GB download)."
+    )
     return (
         "## 3. Baseline (Evidence of the Problem)\n\n"
         "### 3.1 Small-model sanity baseline\n"
         f"- **Status:** `{b_sanity.get('status', 'not run')}`\n"
         f"- **Output:** `{b_sanity.get('output', '—')[:120]}`\n"
         f"- **Runtime:** {b_sanity.get('runtime_s', 0):.2f} s\n\n"
-        "### 3.2 Direct load of OPT-13B (expected failure)\n"
-        f"- **Status:** `{b_direct.get('status', 'not run')}`\n"
-        f"- **Error:** `{str(b_direct.get('error', '—'))[:300]}`\n"
-        f"- **RAM available:** {avail} GB  |  **Required (FP16):** {required} GB  |  **Gap:** {gap} GB\n\n"
-        "**Explanation:** `facebook/opt-13b` in FP16 requires ~26 GB. With only ~7 GB available "
+        "### 3.2 Direct load of 13B model (expected OOM)\n"
+        f"- **Status:** `{status}` {proof_note}\n"
+        f"- **Evidence:** `{stderr_snippet}`\n"
+        f"- **RAM available:** {avail} GB  |  **Required (FP16):** {fp16_gb} GB  |  **Gap:** {gap} GB\n\n"
+        "**Explanation:** `huggyllama/llama-13b` in FP16 requires 26.03 GB. With only ~7 GB available "
         "(18 GB total minus ~11 GB consumed by macOS, browsers, and running processes), "
-        "a direct HuggingFace load would exhaust physical RAM within seconds — causing the kernel "
-        "to page aggressively, thrashing the NVMe, and making inference infeasibly slow. "
-        "This is the *Memory Wall* the lecture describes: RAM capacity, not compute, is the bottleneck. "
-        "**Analytic proof avoids the 26 GB download** — same conclusion, zero waste."
+        "a direct HuggingFace load exhausts physical RAM — the kernel kills the process. "
+        "This is the *Memory Wall* the lecture describes: RAM capacity, not compute, is the bottleneck."
     )
 
 

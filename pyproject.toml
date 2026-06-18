@@ -42,6 +42,9 @@ download     = "airllm_local_lab.scripts.download:main"
 ext-io       = "airllm_local_lab.services.extension_e1_io:main"
 ext-pagecache = "airllm_local_lab.services.extension_e3_pagecache:main"
 chat          = "airllm_local_lab.services.chat:main"
+sweep-ollama  = "airllm_local_lab.services.quant_sweep_ollama:main"
+tpot-sweep    = "airllm_local_lab.services.tpot_sweep:main"
+giant-proof   = "airllm_local_lab.services.giant_proof:main"
 
 [build-system]
 requires      = ["hatchling"]
