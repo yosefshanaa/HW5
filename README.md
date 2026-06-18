@@ -93,10 +93,16 @@ Break-even: ~79.6 M tokens/month. Below this, managed API is cheaper (zero CapEx
 Model:      TinyLlama/TinyLlama-1.1B-Chat-v1.0
 Output:     A transformer is a device that converts electrical energy from one form (e.g., direct
 Tokens:     20
-Runtime:    36.6 s
-Throughput: 0.5459 tok/s
-Peak RAM:   1045 MB
+Runtime:    28.7 s
+Throughput: 0.6966 tok/s
+Peak RAM:   879 MB
 ```
+
+### Live terminal capture (`uv run airllm-demo`)
+
+![S1 — AirLLM demo terminal run](assets/S1_airllm_demo_run.png)
+
+*S1 — Real terminal output of `uv run airllm-demo` on a cold run. The 22 progress bars each represent one transformer layer being streamed sequentially from NVMe (`~/airllm_cache/`). Each pass through all 22 layers takes roughly 1.5 s; the complete 20-token generation finishes in **28.7 s** with peak RAM held at just ~1.1 GB — the whole 2.2 GB model never loads into memory at once. The final output line confirms the model ran entirely **on-device with no GPU and no internet connection**.*
 
 ---
 
@@ -546,6 +552,18 @@ uv run pytest             # 131 tests, >=88% coverage, ~10 s
 | `bitsandbytes` error | CUDA-only dep; macOS incompatible | Expected; documented |
 | Long first run (>40 s) | Cold shard cache | Normal; re-run for warm cache |
 | OOM on baseline | System RAM pressure | Close browsers; re-run |
+
+### Interactive Chat Demo
+
+Run `uv run chat` for a live REPL loop — the model loads once and stays resident between turns, keeping the last 3 exchanges in context.
+
+![S2 — Chat session opening turn](assets/S2_chat_intro.png)
+
+*S2 — Opening turn of `uv run chat`. The banner confirms the model, the token budget (50 tokens ≈ ~70 s per reply), and the available commands (`/tokens N`, `/clear`, `/quit`). The user sends "hi my name is yosef" and the model responds after streaming all 22 layers. The stacked progress bars visualise each layer being loaded from NVMe in sequence — this is AirLLM's mmap demand-paging at transformer-layer granularity, live.*
+
+![S3 — Multi-turn chat: AI in healthcare](assets/S3_chat_healthcare.png)
+
+*S3 — A follow-up turn in the same session: the user asks for examples of AI in healthcare. The model delivers a structured multi-point answer (predictive analytics, diagnostic imaging) demonstrating that conversation context is correctly preserved across turns. A second full 22-layer streaming pass is visible, confirming each generation is independent NVMe-to-RAM demand paging — no weights remain cached in Python memory between calls.*
 
 ---
 
