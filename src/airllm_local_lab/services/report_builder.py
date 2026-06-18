@@ -21,6 +21,7 @@ from airllm_local_lab.services._report_extras import (
     section_raw_benchmark,
     section_token_costs,
 )
+from airllm_local_lab.services._report_planning import section_planning_docs
 from airllm_local_lab.services._report_sections import (
     _HW,
     section_airllm,
@@ -107,6 +108,7 @@ def main() -> None:
 
     sections = [
         section_header(__version__),
+        section_planning_docs(),
         f"## 1. Hardware\n\n{hw_md}\n\n**Critical constraint:** 18 GB unified RAM vs 26 GB for "
         "OPT-13b FP16 → direct load fails. AirLLM's layer-streaming is the only feasible path.",
         section_models(),

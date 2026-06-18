@@ -32,11 +32,8 @@ def section_header(version: str) -> str:
         f"[![Version](https://img.shields.io/badge/version-{version}-green)](#)\n\n"
         "> **HW5 / Assignment 05 — Deep-dive technical report.** Running LLMs that *do not fit* "
         "in memory via AirLLM layer-streaming, quantization, and rigorous benchmarking on GPU-less Apple Silicon hardware.\n\n"
-        "## Planning documents\n"
-        "| Doc | Purpose |\n|---|---|\n"
-        "| [docs/PRD.md](docs/PRD.md) | Requirements, KPIs, acceptance criteria |\n"
-        "| [docs/PLAN.md](docs/PLAN.md) | Architecture, C4, ADRs |\n"
-        "| [docs/TODO.md](docs/TODO.md) | Phased backlog |"
+        "> Full planning documentation (PRD · PLAN · ADRs · TODO · per-mechanism PRDs) is in the "
+        "[Project Planning & Documentation](#project-planning--documentation) section below."
     )
 
 

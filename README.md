@@ -4,12 +4,83 @@
 
 > **HW5 / Assignment 05 — Deep-dive technical report.** Running LLMs that *do not fit* in memory via AirLLM layer-streaming, quantization, and rigorous benchmarking on GPU-less Apple Silicon hardware.
 
-## Planning documents
-| Doc | Purpose |
+> Full planning documentation (PRD · PLAN · ADRs · TODO · per-mechanism PRDs) is in the [Project Planning & Documentation](#project-planning--documentation) section below.
+
+---
+
+## Project Planning & Documentation
+
+This project was built **document-first**: PRD → PLAN → TODO → code. All planning documents live in [`docs/`](docs/) and are versioned alongside the source.
+
+| Document | Purpose | Highlights |
+|---|---|---|
+| [PRD.md](docs/PRD.md) | Master requirements | 6 goals · 23 FRs · 10 NFRs · 8 KPIs · 9 ACs · 9 risks |
+| [PLAN.md](docs/PLAN.md) | Architecture & decisions | C4 diagrams · data-flow · 8 ADRs |
+| [TODO.md](docs/TODO.md) | Phased execution backlog | 8 phases · 47 tasks · DoD per task |
+| [PRD_airllm.md](docs/PRD_airllm.md) | AirLLM mechanism deep-dive | 10 AFs · mmap/page-fault design |
+| [PRD_quantization.md](docs/PRD_quantization.md) | Precision sweep design | FP16/8bit/4bit matrix · CPU constraints |
+| [PRD_benchmarking.md](docs/PRD_benchmarking.md) | Metrics harness design | TTFT/TPOT/RAM/energy/quality spec |
+| [PRD_economic_analysis.md](docs/PRD_economic_analysis.md) | Economics model design | CAPEX/OPEX/API/break-even spec |
+| [prompt_engineering_log.md](docs/prompt_engineering_log.md) | AI-assisted dev log | Key prompts · decisions · outcomes |
+
+### PRD Highlights
+
+**Goals (G1–G6)**
+
+| ID | Goal |
 |---|---|
-| [docs/PRD.md](docs/PRD.md) | Requirements, KPIs, acceptance criteria |
-| [docs/PLAN.md](docs/PLAN.md) | Architecture, C4, ADRs |
-| [docs/TODO.md](docs/TODO.md) | Phased backlog |
+| G1 | Prove a model that *cannot* load normally **can** run via AirLLM |
+| G2 | Quantify memory↔latency trade-off across ≥ 3 precision levels |
+| G3 | Produce a decision-grade economic model: On-Prem vs Managed API |
+| G4 | Tie every number to systems theory (Memory Wall, prefill/decode, mmap) |
+| G5 | Pass the engineering bar: uv · TDD ≥ 85% · Ruff 0 · ≤ 150 lines · gatekeeper |
+| G6 | Deliver ≥ 1 original extension beyond required tasks |
+
+**Key user stories:** researcher runs a 70B-class model on 8 GB RAM with no GPU (US-1); engineer gets a break-even chart to justify a hardware purchase (US-3); grader reproduces every figure with one command (US-4).
+
+**Acceptance criteria (all met ✓):**
+
+| AC | Criterion | Status |
+|---|---|---|
+| AC-1 | README is a complete technical report with all required sections & figures | ✓ |
+| AC-2 | Every figure regenerated from committed `results/` data | ✓ |
+| AC-3 | `uv sync` + run works from a clean clone | ✓ |
+| AC-4 | Ruff 0 violations · ≥ 85% coverage · no file > 150 lines | ✓ |
+| AC-5 | No secrets · `.env-example` present · gatekeeper used | ✓ |
+| AC-6 | `docs/` contains PRD · PLAN · TODO · 4 mechanism PRDs | ✓ |
+| AC-7 | Version 1.00 · prompt-engineering log · ISO/IEC 25010 mapping | ✓ |
+| AC-8 | ≥ 3 precision levels · ≥ 3 reps · break-even · ≥ 1 extension | ✓ |
+| AC-9 | Infeasible items (8bit/4bit on macOS ARM) documented with evidence | ✓ |
+
+### PLAN — Architecture Decision Records (ADRs)
+
+Eight decisions were formally recorded before implementation:
+
+| ADR | Decision | Why it matters |
+|---|---|---|
+| ADR-001 | CPU-only execution; device detected at runtime | M3 Pro has no CUDA; honest worst-case stress test |
+| ADR-002 | opt-13b = analytic OOM proof; TinyLlama = live demo | Avoids 26 GB download; LLaMA arch required for MLX |
+| ADR-003 | Shards at `~/airllm_cache`; E1 benchmarks NVMe vs /tmp | Keeps system root clean; I/O sensitivity becomes data |
+| ADR-004 | 8bit/4bit infeasible (bitsandbytes CUDA-only); documented | Honest negative result with theoretical projections |
+| ADR-005 | Python 3.12 pinned via `uv python pin` | torch/airllm wheels exist; reproducible lock |
+| ADR-006 | `uv` only, never pip; `pyproject.toml` + `uv.lock` committed | Fully reproducible from a clean clone |
+| ADR-007 | `safetensors` exclusively (no pickle) | No pickle RCE vector; aligns with AirLLM mmap design |
+| ADR-008 | Raw results committed; figures generated, never hand-drawn | Every chart is auditable and reproducible |
+
+### TODO — Phased Execution (P0 → P7)
+
+| Phase | Theme | Tasks | Outcome |
+|---|---|---|---|
+| **P0** | Repo · env · guardrails | 11 | uv env · gatekeeper · config · quality gate · CHANGELOG |
+| **P1** | Baseline — evidence of the problem | 4 | OOM proof (opt-13b 26 GB > 18 GB RAM) · Ollama sanity run |
+| **P2** | AirLLM integration (K1) | 6 | TinyLlama generates coherent output; K1 met |
+| **P3** | Quantization sweep (K2/K3) | 5 | FP16 complete; 8bit/4bit infeasible on macOS ARM; documented |
+| **P4** | Benchmark harness + figures (K4) | 7 | 3 reps · median+IQR · TTFT/TPOT/RAM/energy/quality · F1–F5 |
+| **P5** | Economic analysis (K5) | 4 | Break-even 79.6 M tok/mo · E_breakeven.png · assumptions table |
+| **P6** | Theory linkage + extensions (K6/K8) | 5 | §9 theory · E1 I/O · E3 page-cache · F6 · F7 |
+| **P7** | Report assembly + quality gate (K7) | 7 | README 615 lines · 18 sections · all gates green · v1.00 |
+
+> All 47 tasks completed. The full task list with per-task Definition of Done is in [docs/TODO.md](docs/TODO.md).
 
 ---
 
