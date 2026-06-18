@@ -1,0 +1,29 @@
+{
+  "direct_load": {
+    "status": "oom_or_timeout",
+    "model": "huggyllama/llama-13b",
+    "fp16_gb": 26.0,
+    "ram_total_gb": 19.3,
+    "ram_available_gb": 4.9,
+    "gap_gb": 21.1,
+    "error": "Subprocess timed out after 180 s \u2014 OOM pressure likely",
+    "elapsed_s": 180.0
+  },
+  "airllm_streaming": {
+    "model_id": "/Users/ahmadkaiss/airllm_giant_download",
+    "fp16_gb": 26.0,
+    "ram_total_gb": 19.3,
+    "prompt": "Explain in one sentence why large language models require so much memory.",
+    "max_new_tokens": 8,
+    "output": "",
+    "text": "",
+    "num_tokens": 0,
+    "status": "error",
+    "error": "Module does not have parameter named \"rotary_emb\".",
+    "total_s": 2.265,
+    "elapsed_s": 2.265,
+    "throughput_tps": 0,
+    "peak_ram_mb": 274.4,
+    "note": "AirLLM MLX: one layer/token from NVMe. Peak RAM\u22481 layer<<26 GB full model."
+  }
+}

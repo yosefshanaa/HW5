@@ -78,6 +78,12 @@ def run_airllm_giant(model_id: str, shards_path: str, token: str | None) -> dict
     log.info("=== AirLLM giant proof: %s → %s ===", model_id, shards_path)
     Path(shards_path).mkdir(parents=True, exist_ok=True)
 
+    # AirLLM prefers pytorch_model.bin.index.json over safetensors when both exist
+    # but the .bin files don't exist — rename to avoid the conflict.
+    bin_idx = Path(model_id) / "pytorch_model.bin.index.json"
+    if bin_idx.exists():
+        bin_idx.rename(bin_idx.with_suffix(".json.bak"))
+
     backend = AirLLMBackend(model_id=model_id, shards_path=shards_path, token=token)
     sampler = MemorySampler()
     sampler.start()
@@ -108,7 +114,7 @@ def run_airllm_giant(model_id: str, shards_path: str, token: str | None) -> dict
         "output": output_text[:300],
         "text": output_text[:300],
         "num_tokens": num_tokens,
-        "status": "error" if error_msg else "ok",
+        "status": "error" if error_msg is not None else "ok",
         "error": error_msg,
         "total_s": round(total_s, 3),
         "elapsed_s": round(total_s, 3),

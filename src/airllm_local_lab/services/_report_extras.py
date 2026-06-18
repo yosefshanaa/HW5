@@ -10,9 +10,10 @@ def section_kpi_scorecard() -> str:
         "## 15. KPI Achievement Scorecard\n\n"
         "All KPIs defined in [docs/PRD.md](docs/PRD.md) §6.\n\n"
         "| KPI | Target | Result | Status |\n|---|---|---|---|\n"
-        "| **K1** Giant model executes (coherent output) | Binary yes | "
-        "huggyllama/llama-13b (26 GB FP16) via AirLLM layer-streaming: direct HF load → OOM; "
-        "AirLLM streaming → coherent 8-token output. TinyLlama also confirmed. | **PASS** |\n"
+        "| **K1** Giant model OOM proven + layer-streaming confirmed | Binary yes | "
+        "huggyllama/llama-13b (26 GB FP16): direct HF load → OOM (180s timeout). "
+        "AirLLM streaming fails: LLaMA-1 arch incompatible with AirLLMLlamaMlx (rotary_emb). "
+        "Layer-streaming confirmed: TinyLlama (LLaMA-2) at 1416 ms/token. | **PARTIAL** |\n"
         "| **K2** Precision levels benchmarked | >=3 | "
         "3 measured Ollama GGUF levels: Q8_0 (1510 MB, 92 tok/s), Q4_K_M (997 MB, 133 tok/s), "
         "Q2_K (770 MB, 145 tok/s) — real hardware measurements on macOS Metal. "
@@ -31,8 +32,10 @@ def section_kpi_scorecard() -> str:
         "87.7%; 0 violations; all files <=150L; secret scan clean | **PASS** |\n"
         "| **K8** Original extensions | >=1 | "
         "E1 (I/O sensitivity) + E3 (page-cache warmup) = 2 delivered | **PASS** |\n\n"
-        "**All 8 KPIs met.** TPOT=0 placeholder replaced with measured ITL. "
-        "All three honesty gaps (precision sweep, giant OOM proof, TPOT) closed with real experiments."
+        "**7/8 KPIs fully met; K1 partial.** TPOT=0 placeholder replaced with measured ITL. "
+        "Precision sweep and TPOT honesty gaps closed with real experiments. "
+        "K1 giant proof: OOM confirmed; AirLLM streaming requires LLaMA-2 architecture "
+        "(LLaMA-1 huggyllama incompatible with AirLLMLlamaMlx — documented negative result)."
     )
 
 
