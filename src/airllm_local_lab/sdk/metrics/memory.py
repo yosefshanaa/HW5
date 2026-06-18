@@ -9,6 +9,8 @@ from dataclasses import dataclass
 
 @dataclass
 class MemoryResult:
+    """Peak memory readings captured during one inference call."""
+
     peak_ram_mb: float = 0.0
     peak_vram_mb: float = 0.0
     baseline_ram_mb: float = 0.0
@@ -18,6 +20,7 @@ class MemorySampler:
     """Polls process RSS and (if MPS available) GPU memory at a given interval."""
 
     def __init__(self, interval_s: float = 0.5) -> None:
+        """Initialise the sampler with a configurable polling interval."""
         self.interval_s = interval_s
         self._peak_ram: float = 0.0
         self._peak_vram: float = 0.0
@@ -26,6 +29,7 @@ class MemorySampler:
         self._thread: threading.Thread | None = None
 
     def _sample_loop(self) -> None:
+        """Background thread body: poll RSS (and MPS VRAM if available) continuously."""
         import psutil
 
         proc = psutil.Process()
@@ -45,6 +49,7 @@ class MemorySampler:
             time.sleep(self.interval_s)
 
     def start(self) -> None:
+        """Start the background polling thread and record the baseline RSS."""
         import psutil
 
         self._baseline = psutil.Process().memory_info().rss / 1e6
@@ -55,6 +60,7 @@ class MemorySampler:
         self._thread.start()
 
     def stop(self) -> MemoryResult:
+        """Stop the polling thread and return peak memory readings."""
         self._running = False
         if self._thread:
             self._thread.join(timeout=2.0)
@@ -66,6 +72,7 @@ class MemorySampler:
 
 
 def current_rss_mb() -> float:
+    """Return the current process RSS in megabytes (one-shot, no polling)."""
     import psutil
 
     return psutil.Process().memory_info().rss / 1e6

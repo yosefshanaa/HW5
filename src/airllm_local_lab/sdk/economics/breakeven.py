@@ -30,6 +30,7 @@ def build_curves(
     cloud_hourly: float | None = None,
     tokens_per_hour: float = 100,
 ) -> dict[str, list[float]]:
+    """Build monthly-cost curves for on-prem, API, and (optionally) cloud GPU over ``volumes``."""
     curves: dict[str, list[float]] = {
         "onprem": [onprem_cost(v, onprem) for v in volumes],
         "api": [api_cost(v, api) for v in volumes],

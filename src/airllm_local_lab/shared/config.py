@@ -16,6 +16,8 @@ _CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
 
 
 class ModelConfig(BaseModel):
+    """Model selection and inference parameters loaded from ``config/default.toml``."""
+
     model_id: str = "garage-bAInd/Platypus2-70B-instruct"
     sweep_model_id: str = "meta-llama/Meta-Llama-3-8B"
     small_model_id: str = "llama3.2:1b"
@@ -26,6 +28,7 @@ class ModelConfig(BaseModel):
     @field_validator("precision")
     @classmethod
     def _valid_precision(cls, v: str) -> str:
+        """Reject precision values not supported by the AirLLM / bitsandbytes backends."""
         allowed = {"fp16", "8bit", "4bit", "2bit"}
         if v not in allowed:
             raise ValueError(f"precision must be one of {allowed}")
@@ -33,6 +36,8 @@ class ModelConfig(BaseModel):
 
 
 class BenchmarkConfig(BaseModel):
+    """Repetition, seeding, and prompt parameters for the benchmark pipeline."""
+
     repetitions: int = 3
     seed: int = 42
     num_threads: int = 4
@@ -44,6 +49,8 @@ class BenchmarkConfig(BaseModel):
 
 
 class EconomicsConfig(BaseModel):
+    """On-prem cost model parameters (CapEx, electricity, cloud comparisons)."""
+
     hardware_capex: float = 1999.0
     hardware_life_months: int = 36
     maintenance_monthly: float = 10.0
@@ -53,12 +60,15 @@ class EconomicsConfig(BaseModel):
 
 
 class AppConfig(BaseModel):
+    """Root configuration object aggregating all sub-configs."""
+
     model: ModelConfig = ModelConfig()
     benchmark: BenchmarkConfig = BenchmarkConfig()
     economics: EconomicsConfig = EconomicsConfig()
 
 
 def _load_toml(path: Path) -> dict:
+    """Read a TOML file; return an empty dict if the file does not exist."""
     if not path.exists():
         return {}
     with open(path, "rb") as fh:
@@ -66,6 +76,7 @@ def _load_toml(path: Path) -> dict:
 
 
 def load_config() -> AppConfig:
+    """Load ``AppConfig`` from TOML files, then apply env-variable overrides."""
     data = _load_toml(_CONFIG_DIR / "default.toml")
     model_data = data.get("model", {})
     bench_data = data.get("benchmark", {})

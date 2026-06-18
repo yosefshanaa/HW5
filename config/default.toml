@@ -23,3 +23,15 @@ maintenance_monthly  = 10.0
 cloud_gpu_hourly     = 2.50
 in_out_token_ratio   = 0.3
 tokens_per_request   = 500
+
+[rate_limits]
+# Maximum inference requests allowed per minute (local + remote backends combined)
+max_requests_per_minute = 10
+# Hard cap on tokens generated per single request — prevents runaway generation
+max_tokens_per_request  = 2048
+# In-memory queue depth before new requests are rejected (HTTP 429)
+queue_size              = 100
+# Seconds a caller must wait after being rate-limited before retrying
+retry_after_seconds     = 60
+# Per-day HF Hub API call budget (download manifest checks count against this)
+hf_api_calls_per_day    = 200

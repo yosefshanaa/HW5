@@ -43,6 +43,52 @@ def section_research_questions() -> str:
     )
 
 
+def section_contributing() -> str:
+    """Return the §18 contribution guidelines and license section."""
+    return (
+        "## 18. Contributing & License\n\n"
+        "### Contributing\n\n"
+        "Contributions are welcome! Please follow these steps:\n\n"
+        "1. **Fork** the repository and create a feature branch: `git checkout -b feat/your-feature`\n"
+        "2. **Follow the code conventions**: "
+        "Ruff-clean (`uv run ruff check src/`), "
+        "all files ≤ 150 lines, "
+        "docstrings on every public function/class.\n"
+        "3. **Write tests first (TDD)**: add tests under `tests/`; "
+        "coverage must stay at or above 85%.\n"
+        "4. **Run the full gate** before opening a PR:\n\n"
+        "   ```bash\n"
+        "   uv run ruff check src/\n"
+        "   uv run pytest --cov=airllm_local_lab --cov-report=term-missing\n"
+        "   uv run quality-gate\n"
+        "   ```\n\n"
+        "5. **Open a Pull Request** against `main` with a clear description of the change "
+        "and which KPI / acceptance criterion it addresses.\n\n"
+        "### Extension Points\n\n"
+        "The SDK is designed for extension at three layers:\n\n"
+        "| Extension point | How to add | Example |\n|---|---|---|\n"
+        "| **New backend** | Subclass `sdk/model_loader/base.py:Backend`; "
+        "implement `load()` and `generate()` | vLLM backend, llama.cpp backend |\n"
+        "| **New metric** | Add a module under `sdk/metrics/`; "
+        "follow the `Result` dataclass pattern | GPU utilisation, KV-cache hit rate |\n"
+        "| **New precision** | Add entry to `config/models.toml` and `allowed` set in "
+        "`shared/config.py:_valid_precision` | fp8, bfloat16 |\n"
+        "| **New visualisation** | Add a function to `sdk/viz/plots.py` "
+        "returning a `matplotlib.Figure` | Attention-head heatmap |\n\n"
+        "### License\n\n"
+        "MIT © 2026 Ahmad Kaiss, Yosef Shanaa. See [LICENSE](LICENSE).\n\n"
+        "### Third-Party Attributions\n\n"
+        "| Library | License | Use |\n|---|---|---|\n"
+        "| [AirLLM](https://github.com/lyogavin/airllm) | Apache-2.0 | Layer-streaming inference |\n"
+        "| [HuggingFace Transformers](https://github.com/huggingface/transformers) | Apache-2.0 | "
+        "Tokeniser + direct-load baseline |\n"
+        "| [TinyLlama-1.1B-Chat](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0) | "
+        "Apache-2.0 | Live demo model |\n"
+        "| [psutil](https://github.com/giampaolo/psutil) | BSD-3-Clause | RAM sampling |\n"
+        "| [matplotlib](https://matplotlib.org/) | PSF/BSD | Figures F1–F7 |"
+    )
+
+
 def section_run_instructions() -> str:
     return (
         "## 17. How to Reproduce\n\n"

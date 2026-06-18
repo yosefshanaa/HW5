@@ -11,6 +11,8 @@ from dataclasses import dataclass
 
 @dataclass
 class EnergyResult:
+    """Energy consumption estimate for one inference call."""
+
     runtime_s: float
     avg_power_w: float
     energy_j: float
@@ -18,6 +20,7 @@ class EnergyResult:
 
     @classmethod
     def from_runtime(cls, runtime_s: float, avg_power_w: float = 30.0) -> EnergyResult:
+        """Construct an ``EnergyResult`` from measured runtime and a TDP estimate."""
         energy_j = avg_power_w * runtime_s
         return cls(
             runtime_s=runtime_s,
@@ -27,6 +30,7 @@ class EnergyResult:
         )
 
     def cost_usd(self, rate_per_kwh: float) -> float:
+        """Convert energy consumption to USD at the given electricity rate."""
         return self.energy_kwh * rate_per_kwh
 
 

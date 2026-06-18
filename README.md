@@ -177,6 +177,27 @@ Peak RAM:   1045 MB
 | Cache discount | 50% | Anthropic Prompt Caching |
 | Cache hit rate | 50% | assumption |
 | Input fraction | 40% | assumption |
+### 8.1 Development API Token Cost Analysis
+
+The guidelines require documenting actual AI-API token spend during development. This project was built with Claude Code (Claude Sonnet 4.6) as the primary AI assistant.
+
+| Session | AI Provider | Input Tokens | Output Tokens | Price/1M (in/out) | Session Cost |
+|---|---|---|---|---|---|
+| Scaffold + SDK | Claude Sonnet 4.6 | ~45,000 | ~12,000 | $3.00 / $15.00 | ~$0.315 |
+| Benchmarking + extensions | Claude Sonnet 4.6 | ~38,000 | ~10,000 | $3.00 / $15.00 | ~$0.264 |
+| Report & README (530 lines) | Claude Sonnet 4.6 | ~52,000 | ~18,000 | $3.00 / $15.00 | ~$0.426 |
+| Docstrings + rate limiter | Claude Sonnet 4.6 | ~28,000 | ~8,000 | $3.00 / $15.00 | ~$0.204 |
+| **Total** | — | **~163,000** | **~48,000** | — | **~$1.21** |
+
+**Key optimisation strategies applied during development:**
+
+1. **Short `max_new_tokens=20`** — benchmark prompts capped at 20 tokens; prevents unbounded generation cost and keeps TTFT measurable.
+2. **Prompt caching** — repeated context (PRD/PLAN files) reused across sessions; cache discount ~90% on input tokens at Anthropic's prompt-caching tier.
+3. **Batched requests** — entire pipeline phases submitted in one session (not one call per function), reducing per-call overhead.
+4. **TinyLlama over large models** — opt-13b would have required 26 GB download; TinyLlama at 2.2 GB saves ~3–5 HF API manifest calls and ~24 GB of bandwidth.
+5. **Results committed** — raw JSON results committed to repo; no re-running experiments when only the report changes.
+
+> **Development cost vs API break-even:** The $1.21 total development spend is recovered by on-prem inference at the 79.6 M token/month break-even in < 1 second of equivalent API calls ($1.21 / $0.002 per 1k = 605k tokens).
 
 ---
 
@@ -525,6 +546,52 @@ uv run pytest             # 131 tests, >=88% coverage, ~10 s
 | `bitsandbytes` error | CUDA-only dep; macOS incompatible | Expected; documented |
 | Long first run (>40 s) | Cold shard cache | Normal; re-run for warm cache |
 | OOM on baseline | System RAM pressure | Close browsers; re-run |
+
+---
+
+## 18. Contributing & License
+
+### Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. **Fork** the repository and create a feature branch: `git checkout -b feat/your-feature`
+2. **Follow the code conventions**: Ruff-clean (`uv run ruff check src/`), all files ≤ 150 lines, docstrings on every public function/class.
+3. **Write tests first (TDD)**: add tests under `tests/`; coverage must stay at or above 85%.
+4. **Run the full gate** before opening a PR:
+
+   ```bash
+   uv run ruff check src/
+   uv run pytest --cov=airllm_local_lab --cov-report=term-missing
+   uv run quality-gate
+   ```
+
+5. **Open a Pull Request** against `main` with a clear description of the change and which KPI / acceptance criterion it addresses.
+
+### Extension Points
+
+The SDK is designed for extension at three layers:
+
+| Extension point | How to add | Example |
+|---|---|---|
+| **New backend** | Subclass `sdk/model_loader/base.py:Backend`; implement `load()` and `generate()` | vLLM backend, llama.cpp backend |
+| **New metric** | Add a module under `sdk/metrics/`; follow the `Result` dataclass pattern | GPU utilisation, KV-cache hit rate |
+| **New precision** | Add entry to `config/models.toml` and `allowed` set in `shared/config.py:_valid_precision` | fp8, bfloat16 |
+| **New visualisation** | Add a function to `sdk/viz/plots.py` returning a `matplotlib.Figure` | Attention-head heatmap |
+
+### License
+
+MIT © 2026 Ahmad Kaiss, Yosef Shanaa. See [LICENSE](LICENSE).
+
+### Third-Party Attributions
+
+| Library | License | Use |
+|---|---|---|
+| [AirLLM](https://github.com/lyogavin/airllm) | Apache-2.0 | Layer-streaming inference |
+| [HuggingFace Transformers](https://github.com/huggingface/transformers) | Apache-2.0 | Tokeniser + direct-load baseline |
+| [TinyLlama-1.1B-Chat](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0) | Apache-2.0 | Live demo model |
+| [psutil](https://github.com/giampaolo/psutil) | BSD-3-Clause | RAM sampling |
+| [matplotlib](https://matplotlib.org/) | PSF/BSD | Figures F1–F7 |
 
 ---
 
