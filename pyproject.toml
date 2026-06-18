@@ -41,6 +41,7 @@ quality-gate = "airllm_local_lab.shared.quality_gate:main"
 download     = "airllm_local_lab.scripts.download:main"
 ext-io       = "airllm_local_lab.services.extension_e1_io:main"
 ext-pagecache = "airllm_local_lab.services.extension_e3_pagecache:main"
+chat          = "airllm_local_lab.services.chat:main"
 
 [build-system]
 requires      = ["hatchling"]
