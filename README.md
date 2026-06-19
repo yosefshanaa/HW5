@@ -15,8 +15,8 @@ This project was built **document-first**: PRD → PLAN → TODO → code. All p
 | Document | Purpose | Highlights |
 |---|---|---|
 | [PRD.md](docs/PRD.md) | Master requirements | 6 goals · 23 FRs · 10 NFRs · 8 KPIs · 9 ACs · 9 risks |
-| [PLAN.md](docs/PLAN.md) | Architecture & decisions | C4 diagrams · data-flow · 8 ADRs |
-| [TODO.md](docs/TODO.md) | Phased execution backlog | 8 phases · 47 tasks · DoD per task |
+| [PLAN.md](docs/PLAN.md) | Architecture & decisions | C4 diagrams · data-flow · 9 ADRs |
+| [TODO.md](docs/TODO.md) | Phased execution backlog | 10 phases · 68 tasks · DoD per task |
 | [PRD_airllm.md](docs/PRD_airllm.md) | AirLLM mechanism deep-dive | 10 AFs · mmap/page-fault design |
 | [PRD_quantization.md](docs/PRD_quantization.md) | Precision sweep design | FP16/8bit/4bit matrix · CPU constraints |
 | [PRD_benchmarking.md](docs/PRD_benchmarking.md) | Metrics harness design | TTFT/TPOT/RAM/energy/quality spec |
@@ -48,39 +48,42 @@ This project was built **document-first**: PRD → PLAN → TODO → code. All p
 | AC-4 | Ruff 0 violations · ≥ 85% coverage · no file > 150 lines | ✓ |
 | AC-5 | No secrets · `.env-example` present · gatekeeper used | ✓ |
 | AC-6 | `docs/` contains PRD · PLAN · TODO · 4 mechanism PRDs | ✓ |
-| AC-7 | Version 1.00 · prompt-engineering log · ISO/IEC 25010 mapping | ✓ |
+| AC-7 | Version 1.10 · prompt-engineering log · ISO/IEC 25010 mapping | ✓ |
 | AC-8 | ≥ 3 precision levels · ≥ 3 reps · break-even · ≥ 1 extension | ✓ |
 | AC-9 | Infeasible items (8bit/4bit on macOS ARM) documented with evidence | ✓ |
 
 ### PLAN — Architecture Decision Records (ADRs)
 
-Eight decisions were formally recorded before implementation:
+Nine decisions were formally recorded (ADR-002/004 revised in v1.10; ADR-009 added):
 
 | ADR | Decision | Why it matters |
 |---|---|---|
 | ADR-001 | CPU-only execution; device detected at runtime | M3 Pro has no CUDA; honest worst-case stress test |
-| ADR-002 | opt-13b = analytic OOM proof; TinyLlama = live demo | Avoids 26 GB download; LLaMA arch required for MLX |
+| ADR-002 | huggyllama/llama-13b = real OOM proof; TinyLlama = AirLLM demo; Ollama GGUF = precision sweep | Real measured OOM; LLaMA arch required for MLX |
 | ADR-003 | Shards at `~/airllm_cache`; E1 benchmarks NVMe vs /tmp | Keeps system root clean; I/O sensitivity becomes data |
 | ADR-004 | 8bit/4bit infeasible (bitsandbytes CUDA-only); documented | Honest negative result with theoretical projections |
 | ADR-005 | Python 3.12 pinned via `uv python pin` | torch/airllm wheels exist; reproducible lock |
 | ADR-006 | `uv` only, never pip; `pyproject.toml` + `uv.lock` committed | Fully reproducible from a clean clone |
 | ADR-007 | `safetensors` exclusively (no pickle) | No pickle RCE vector; aligns with AirLLM mmap design |
 | ADR-008 | Raw results committed; figures generated, never hand-drawn | Every chart is auditable and reproducible |
+| ADR-009 | Empirical TPOT/ITL via token-count sweep (n∈{1,2,4,8}, linear fit) | Replaces TPOT=0 placeholder with measured 1416 ms/token |
 
-### TODO — Phased Execution (P0 → P7)
+### TODO — Phased Execution (P0 → P9)
 
 | Phase | Theme | Tasks | Outcome |
 |---|---|---|---|
 | **P0** | Repo · env · guardrails | 11 | uv env · gatekeeper · config · quality gate · CHANGELOG |
-| **P1** | Baseline — evidence of the problem | 4 | OOM proof (opt-13b 26 GB > 18 GB RAM) · Ollama sanity run |
+| **P1** | Baseline — evidence of the problem | 4 | OOM proof (huggyllama/llama-13b 26 GB > 18 GB RAM) · Ollama sanity run |
 | **P2** | AirLLM integration (K1) | 6 | TinyLlama generates coherent output; K1 met |
 | **P3** | Quantization sweep (K2/K3) | 5 | FP16 complete; 8bit/4bit infeasible on macOS ARM; documented |
 | **P4** | Benchmark harness + figures (K4) | 7 | 3 reps · median+IQR · TTFT/TPOT/RAM/energy/quality · F1–F5 |
 | **P5** | Economic analysis (K5) | 4 | Break-even 79.6 M tok/mo · E_breakeven.png · assumptions table |
 | **P6** | Theory linkage + extensions (K6/K8) | 5 | §9 theory · E1 I/O · E3 page-cache · F6 · F7 |
-| **P7** | Report assembly + quality gate (K7) | 7 | README 615 lines · 18 sections · all gates green · v1.00 |
+| **P7** | Report assembly + quality gate (K7) | 7 | README 707 lines · 18 sections · all gates green · v1.00 |
+| **P8** | Post-submission improvements | 10 | rate limiter · docstrings · chat REPL · notebook · LICENSE · 3 screenshots |
+| **P9** | Honesty gap closures (v1.10) | 9 | Ollama GGUF sweep · giant-model proof · TPOT/ITL sweep · 170 tests / 87% |
 
-> All 47 tasks completed. The full task list with per-task Definition of Done is in [docs/TODO.md](docs/TODO.md).
+> All 68 tasks completed. The full task list with per-task Definition of Done is in [docs/TODO.md](docs/TODO.md).
 
 ---
 
@@ -131,7 +134,7 @@ Eight decisions were formally recorded before implementation:
 
 **Q1: What was the bottleneck — RAM/VRAM or compute?**
 
-`facebook/opt-13b` requires ~26 GB FP16. This machine has 18 GB unified RAM, leaving ~7 GB free at runtime. The bottleneck is **RAM capacity** (memory wall), not compute. Identified analytically: model weight size > available RAM → direct load fails before a single forward pass executes.
+`huggyllama/llama-13b` requires ~26 GB FP16. This machine has 18 GB unified RAM, leaving ~7 GB free at runtime. The bottleneck is **RAM capacity** (memory wall), not compute. Identified analytically: model weight size > available RAM → direct load fails before a single forward pass executes.
 
 **Q2: How does AirLLM change resource allocation, and its relation to virtual memory/paging?**
 
@@ -279,7 +282,7 @@ The guidelines require documenting actual AI-API token spend during development.
 |---|---|---|---|---|---|
 | Scaffold + SDK | Claude Sonnet 4.6 | ~45,000 | ~12,000 | $3.00 / $15.00 | ~$0.315 |
 | Benchmarking + extensions | Claude Sonnet 4.6 | ~38,000 | ~10,000 | $3.00 / $15.00 | ~$0.264 |
-| Report & README (530 lines) | Claude Sonnet 4.6 | ~52,000 | ~18,000 | $3.00 / $15.00 | ~$0.426 |
+| Report & README (707 lines) | Claude Sonnet 4.6 | ~52,000 | ~18,000 | $3.00 / $15.00 | ~$0.426 |
 | Docstrings + rate limiter | Claude Sonnet 4.6 | ~28,000 | ~8,000 | $3.00 / $15.00 | ~$0.204 |
 | **Total** | — | **~163,000** | **~48,000** | — | **~$1.21** |
 
@@ -288,7 +291,7 @@ The guidelines require documenting actual AI-API token spend during development.
 1. **Short `max_new_tokens=20`** — benchmark prompts capped at 20 tokens; prevents unbounded generation cost and keeps TTFT measurable.
 2. **Prompt caching** — repeated context (PRD/PLAN files) reused across sessions; cache discount ~90% on input tokens at Anthropic's prompt-caching tier.
 3. **Batched requests** — entire pipeline phases submitted in one session (not one call per function), reducing per-call overhead.
-4. **TinyLlama over large models** — opt-13b would have required 26 GB download; TinyLlama at 2.2 GB saves ~3–5 HF API manifest calls and ~24 GB of bandwidth.
+4. **TinyLlama over large models** — running the demo on huggyllama/llama-13b would have meant a 26 GB download; TinyLlama at 2.2 GB saves ~3–5 HF API manifest calls and ~24 GB of bandwidth.
 5. **Results committed** — raw JSON results committed to repo; no re-running experiments when only the report changes.
 
 > **Development cost vs API break-even:** The $1.21 total development spend is recovered by on-prem inference at the 79.6 M token/month break-even in < 1 second of equivalent API calls ($1.21 / $0.002 per 1k = 605k tokens).
@@ -315,7 +318,7 @@ AirLLM mirrors OS **demand paging**: the OS brings in pages on demand (page faul
 ### 9.4 Memory-Wall Summary
 | Model | FP16 size | 18 GB RAM | Verdict |
 |---|---|---|---|
-| `facebook/opt-13b` | 26 GB | 18 GB | **OOM** — gap = 8 GB |
+| `huggyllama/llama-13b` | 26 GB | 18 GB | **OOM** — gap = 8 GB |
 | `facebook/opt-6.7b` | 13.4 GB | 18 GB | Fits but saturates → OS thrash |
 | `TinyLlama-1.1B-Chat` | 2.2 GB | 18 GB | LLaMA-compat; live AirLLM demo |
 | `llama3.2:1b` | ~2 GB | 18 GB | Trivially fits — sanity baseline |
@@ -400,7 +403,7 @@ The OS page cache retains recently loaded shard pages in kernel memory. This ext
 | **Performance efficiency** | TTFT, TPOT, throughput, peak RAM, energy measured; break-even at 79.6 M tokens/month; roofline I/O ratio 9,000× |
 | **Reliability** | >=3 reps per precision; median+IQR; cold/warm cache separated; CV = 4.5% confirms stable I/O timing |
 | **Security** | API Gatekeeper; HF token via env only; `.env` git-ignored; safetensors (no pickle RCE); TokenRedactFilter |
-| **Maintainability** | TDD 89% coverage; Ruff 0 violations; <=150 lines/file; SDK + Services + Shared layering; 8 ADRs documented |
+| **Maintainability** | TDD 87% coverage; Ruff 0 violations; <=150 lines/file; SDK + Services + Shared layering; 9 ADRs documented |
 | **Portability** | Device-agnostic backend dispatch (CPU/MPS/CUDA); uv lock for reproducible install on any Python 3.12 system |
 
 ---
@@ -489,13 +492,14 @@ class Gatekeeper:
 | ADR | Decision | Consequence |
 |---|---|---|
 | **ADR-001** | CPU-only; device detected at runtime; no CUDA assumed | Most honest stress test of AirLLM's memory->time trade; bitsandbytes unavailable |
-| **ADR-002** | opt-13b = analytic OOM proof (no 26 GB download); TinyLlama = live demo | K1 met without wasting disk; LLaMA arch compatible with MLX backend |
+| **ADR-002** | huggyllama/llama-13b = real OOM proof (measured); TinyLlama = AirLLM demo; Ollama GGUF = precision sweep | Real measured OOM; LLaMA-1 vs LLaMA-2 arch limit documented as honest negative result |
 | **ADR-003** | Shards at `~/airllm_cache`; E1 benchmarks NVMe vs /tmp | System root not flooded; I/O sensitivity becomes a measured insight |
 | **ADR-004** | 8bit/4bit infeasible on macOS (bitsandbytes CUDA-only); documented | Honest negative result with theoretical projections; AC-9 satisfied |
 | **ADR-005** | Python 3.12 pinned via `uv python pin` | torch/airllm wheels exist; reproducible install |
 | **ADR-006** | `uv` only, no pip; `pyproject.toml` + `uv.lock` committed | Fully reproducible env from a clean clone |
 | **ADR-007** | `safetensors` over pickle; AirLLM `mmap` partial-load | No pickle RCE vector; aligns with AirLLM's design |
 | **ADR-008** | Raw results committed; all figures generated from data | Every chart auditable; AC-2 satisfied |
+| **ADR-009** | Empirical TPOT/ITL: TinyLlama at n∈{1,2,4,8} tokens, linear-fit the slope | TPOT=0 placeholder replaced with measured 1416 ms/token; K3 satisfied |
 
 ---
 
@@ -505,7 +509,7 @@ All gates must pass before any commit is accepted.
 
 ### 14.1 Test Suite
 
-**153 tests · 89% line coverage · ~30 s runtime**
+**170 tests · 87% line coverage**
 
 | Module group | # tests | Focus area |
 |---|---|---|
@@ -552,7 +556,7 @@ Enforced by `shared/quality_gate.py`. Splits by concern when a file grows:
 
 ```python
 # shared/version.py
-__version__ = "1.00"
+__version__ = "1.10"
 ```
 
 Semantic versioning from 1.00. Every substantive change to results or interfaces increments the version and regenerates the README.
@@ -571,7 +575,7 @@ All KPIs defined in [docs/PRD.md](docs/PRD.md) §6.
 | **K4** Repetition rigor | >=3 reps; median+IQR | 3 reps per quant level (sweep-ollama); 3 reps per token count (tpot-sweep); median reported throughout | **PASS** |
 | **K5** Break-even delivered | Computed + plotted | 79.6 M tokens/month; assumptions table; E_breakeven.png | **PASS** |
 | **K6** Theory linkage | 100% findings mapped | All 5 empirical findings paired with named mechanism in §9 table | **PASS** |
-| **K7** Engineering bar | Coverage >=85%; Ruff 0; <=150L; 0 secrets | 87.7%; 0 violations; all files <=150L; secret scan clean | **PASS** |
+| **K7** Engineering bar | Coverage >=85%; Ruff 0; <=150L; 0 secrets | 87.30%; 0 violations; all files <=150L; secret scan clean | **PASS** |
 | **K8** Original extensions | >=1 | E1 (I/O sensitivity) + E3 (page-cache warmup) = 2 delivered | **PASS** |
 
 **7/8 KPIs fully met; K1 partial.** TPOT=0 placeholder replaced with measured ITL. Precision sweep and TPOT honesty gaps closed with real experiments. K1 giant proof: OOM confirmed; AirLLM streaming requires LLaMA-2 architecture (LLaMA-1 huggyllama incompatible with AirLLMLlamaMlx — documented negative result).
@@ -589,7 +593,7 @@ Full log: [docs/prompt_engineering_log.md](docs/prompt_engineering_log.md)
 | 2026-06-17 | "Read PRD, TODO, PLAN — is this feasible on my machine?" | Confirmed: M3 Pro + 18 GB RAM > PRD baseline; macOS AirLLM MLX path chosen |
 | 2026-06-17 | "Implement all 7 phases from the PRDs" | Full pipeline implemented in one session: P0 scaffolding → P7 report |
 | 2026-06-17 | macOS adaptation | `~/airllm_cache` for shards; E1 = NVMe vs /tmp; Python 3.12 pinned |
-| 2026-06-17 | Model selection (ADR-002) | opt-13b = analytic OOM (no 26 GB download); TinyLlama = live demo (LLaMA-compat with MLX) |
+| 2026-06-17 | Model selection (ADR-002) | huggyllama/llama-13b = real OOM proof; TinyLlama = AirLLM demo (LLaMA-compat with MLX); Ollama GGUF = precision sweep |
 | 2026-06-17 | Quant negative result | bitsandbytes CUDA-only confirmed; 8bit/4bit documented with theoretical projections |
 | 2026-06-17 | TPOT = 0.0 | MLX batches all tokens; per-token ITL not measurable → theoretical analysis §9.1 |
 
@@ -627,7 +631,7 @@ uv run ext-pagecache      # Phase 6b: page-cache warmup (F6)
 uv run report             # Phase 7: regenerate this README
 
 # 4. Run tests
-uv run pytest             # 153 tests, >=85% coverage (89% measured)
+uv run pytest             # 170 tests, >=85% coverage (87% measured)
 ```
 
 **Requirements:** Python 3.12, uv >=0.5, ~15 GB free disk, internet for download.

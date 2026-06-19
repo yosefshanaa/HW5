@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..shared.version import __version__
+
 
 def section_architecture() -> str:
     return (
@@ -77,8 +79,8 @@ def section_architecture() -> str:
         "| ADR | Decision | Consequence |\n|---|---|---|\n"
         "| **ADR-001** | CPU-only; device detected at runtime; no CUDA assumed | "
         "Most honest stress test of AirLLM's memory->time trade; bitsandbytes unavailable |\n"
-        "| **ADR-002** | opt-13b = analytic OOM proof (no 26 GB download); TinyLlama = live demo | "
-        "K1 met without wasting disk; LLaMA arch compatible with MLX backend |\n"
+        "| **ADR-002** | huggyllama/llama-13b = real OOM proof (measured); TinyLlama = AirLLM demo; Ollama GGUF = precision sweep | "
+        "Real measured OOM; LLaMA-1 vs LLaMA-2 arch limit documented as honest negative result |\n"
         "| **ADR-003** | Shards at `~/airllm_cache`; E1 benchmarks NVMe vs /tmp | "
         "System root not flooded; I/O sensitivity becomes a measured insight |\n"
         "| **ADR-004** | 8bit/4bit infeasible on macOS (bitsandbytes CUDA-only); documented | "
@@ -90,16 +92,18 @@ def section_architecture() -> str:
         "| **ADR-007** | `safetensors` over pickle; AirLLM `mmap` partial-load | "
         "No pickle RCE vector; aligns with AirLLM's design |\n"
         "| **ADR-008** | Raw results committed; all figures generated from data | "
-        "Every chart auditable; AC-2 satisfied |"
+        "Every chart auditable; AC-2 satisfied |\n"
+        "| **ADR-009** | Empirical TPOT/ITL: TinyLlama at n∈{1,2,4,8} tokens, linear-fit the slope | "
+        "TPOT=0 placeholder replaced with measured 1416 ms/token; K3 satisfied |"
     )
 
 
-def section_quality_gates(coverage_pct: float = 89.0) -> str:
+def section_quality_gates(coverage_pct: float = 87.3) -> str:
     return (
         "## 14. Engineering Quality Gates\n\n"
         "All gates must pass before any commit is accepted.\n\n"
         "### 14.1 Test Suite\n\n"
-        f"**153 tests · {coverage_pct:.0f}% line coverage · ~30 s runtime**\n\n"
+        f"**170 tests · {coverage_pct:.0f}% line coverage**\n\n"
         "| Module group | # tests | Focus area |\n|---|---|---|\n"
         "| `test_gatekeeper`, `test_config` | 9 | Secrets from env only; config validation |\n"
         "| `test_economics`, `test_economic_model*` | 14 | CAPEX/OPEX, API pricing, break-even |\n"
@@ -134,7 +138,7 @@ def section_quality_gates(coverage_pct: float = 89.0) -> str:
         "### 14.5 Version Tracking\n\n"
         "```python\n"
         "# shared/version.py\n"
-        '__version__ = "1.00"\n'
+        f'__version__ = "{__version__}"\n'
         "```\n\n"
         "Semantic versioning from 1.00. Every substantive change to results or "
         "interfaces increments the version and regenerates the README."

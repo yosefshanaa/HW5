@@ -7,7 +7,7 @@ def section_research_questions() -> str:
     return (
         "## 4. Research Questions\n\n"
         "**Q1: What was the bottleneck — RAM/VRAM or compute?**\n\n"
-        "`facebook/opt-13b` requires ~26 GB FP16. This machine has 18 GB unified RAM, "
+        "`huggyllama/llama-13b` requires ~26 GB FP16. This machine has 18 GB unified RAM, "
         "leaving ~7 GB free at runtime. The bottleneck is **RAM capacity** (memory wall), "
         "not compute. Identified analytically: model weight size > available RAM → direct load "
         "fails before a single forward pass executes.\n\n"
@@ -109,7 +109,7 @@ def section_run_instructions() -> str:
         "uv run ext-pagecache      # Phase 6b: page-cache warmup (F6)\n"
         "uv run report             # Phase 7: regenerate this README\n\n"
         "# 4. Run tests\n"
-        "uv run pytest             # 153 tests, >=85% coverage (89% measured)\n"
+        "uv run pytest             # 170 tests, >=85% coverage (87% measured)\n"
         "```\n\n"
         "**Requirements:** Python 3.12, uv >=0.5, ~15 GB free disk, internet for download.\n\n"
         "**Troubleshooting:**\n\n"

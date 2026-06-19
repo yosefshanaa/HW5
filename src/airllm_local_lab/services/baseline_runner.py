@@ -17,6 +17,7 @@ RESULTS = Path(__file__).resolve().parents[3] / "results"
 
 # Known FP16 footprints (GB) for models we work with — avoids 26 GB download to prove OOM
 _MODEL_FP16_GB: dict[str, float] = {
+    "huggyllama/llama-13b": 26.0,
     "facebook/opt-13b": 26.0,
     "facebook/opt-6.7b": 13.4,
     "garage-bAInd/Platypus2-70B-instruct": 140.0,

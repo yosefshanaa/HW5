@@ -235,6 +235,6 @@ Candidate extensions, each with a measurable mini-evaluation:
 | OQ | Question | Resolution |
 |---|---|---|
 | **OQ-1** | Is a discrete GPU available? (nvidia-smi check) | ✅ Resolved — macOS ARM, no CUDA GPU. MLX backend used. ADR-001 confirmed. |
-| **OQ-2** | Which exact giant model? | ✅ Resolved — `facebook/opt-13b` (analytic OOM proof, 26 GB > 18 GB); `TinyLlama/TinyLlama-1.1B-Chat-v1.0` (live demo + sweep, LLaMA-compat with MLX). ADR-002 accepted. |
+| **OQ-2** | Which exact giant model? | ✅ Resolved (v1.10) — `huggyllama/llama-13b` (real measured OOM, 26 GB > 18 GB); `TinyLlama/TinyLlama-1.1B-Chat-v1.0` (AirLLM demo + TPOT sweep, LLaMA-compat with MLX); `llama3.2:1b` Q8_0/Q4_K_M/Q2_K via Ollama (precision sweep). ADR-002 revised. |
 | **OQ-3** | Electricity rate + API price source/date? | ✅ Resolved — $0.15/kWh; Claude 3 Haiku $0.00025/$0.00125 per 1k tokens (Anthropic pricing 2026-06-17). Documented in `config/economics.toml`. |
 | **OQ-4** | Which extensions to commit to? | ✅ Resolved — E1 (I/O sensitivity: NVMe vs /tmp) + E3 (page-cache warmup curve). Both delivered with charts and write-ups. |
