@@ -131,7 +131,7 @@ def section_raw_benchmark(raw_rows: list[dict]) -> str:
         f"- Throughput: median = **{statistics.median(tputs):.4f} tok/s**\n"
         f"- Peak RAM: median = **{statistics.median(rams):.0f} MB** (one layer held at a time)\n"
         f"- Energy: median = **{statistics.median(energies):.1f} J** "
-        f"({statistics.median(energies) / 3600 * 1000:.4f} Wh per 20-token generation)\n\n"
+        f"({statistics.median(energies) / 3600:.4f} Wh per 20-token generation)\n\n"
         f"**Cold vs warm:** rep 1 (cold) = {cold_ttft:.3f} s · "
         f"reps 2-3 (warm) avg = {warm_avg:.3f} s · warm is {delta_pct:.1f}% faster. "
         "The OS page cache retains shard pages in kernel memory — quantified in Extension E3.\n"

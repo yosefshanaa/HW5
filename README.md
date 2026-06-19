@@ -239,7 +239,7 @@ Peak RAM:   879 MB
 - TTFT: median = **27.959 s** · IQR = 1.271 s · CV = 4.5%
 - Throughput: median = **0.7511 tok/s**
 - Peak RAM: median = **1108 MB** (one layer held at a time)
-- Energy: median = **838.8 J** (232.9944 Wh per 20-token generation)
+- Energy: median = **838.8 J** (0.2330 Wh per 20-token generation)
 
 **Cold vs warm:** rep 1 (cold) = 27.099 s · reps 2-3 (warm) avg = 28.165 s · warm is -3.9% faster. The OS page cache retains shard pages in kernel memory — quantified in Extension E3.
 
