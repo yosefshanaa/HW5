@@ -6,6 +6,7 @@ import json
 import time
 from pathlib import Path
 
+from airllm_local_lab.sdk.metrics.airllm_instrument import capture_layer_timeline, write_timeline
 from airllm_local_lab.sdk.metrics.memory import MemorySampler
 from airllm_local_lab.sdk.model_loader.airllm_backend import AirLLMBackend
 from airllm_local_lab.shared.config import load_config
@@ -23,6 +24,7 @@ def run_airllm_demo(
     prompt: str = "Explain what a transformer is in one sentence.",
     max_new_tokens: int = 32,
     compression: str | None = None,
+    timeline_out: Path | None = None,
 ) -> dict:
     log.info("=== AirLLM demo: %s (compression=%s) ===", model_id, compression)
     backend = AirLLMBackend(
@@ -35,10 +37,22 @@ def run_airllm_demo(
     sampler.start()
     t0 = time.perf_counter()
     backend.load()
-    result = backend.generate(prompt, max_new_tokens=max_new_tokens)
+    with capture_layer_timeline() as timeline:
+        result = backend.generate(prompt, max_new_tokens=max_new_tokens)
     total_s = time.perf_counter() - t0
     mem = sampler.stop()
     backend.unload()
+
+    if timeline_out is not None:
+        dicts = timeline.to_dicts()
+        write_timeline(dicts, timeline_out)
+        if dicts:
+            log.info(
+                "Captured %d-layer timeline — I/O fraction %.0f%% → %s",
+                len(dicts),
+                timeline.io_fraction() * 100,
+                timeline_out,
+            )
 
     record = {
         "model_id": model_id,
@@ -66,6 +80,7 @@ def main() -> None:
         shards_path=shards_path,
         token=gk.hf_token(),
         max_new_tokens=cfg.model.max_new_tokens,
+        timeline_out=RESULTS / "layer_timeline.json",
     )
 
     out_file = RESULTS / "airllm_demo.json"

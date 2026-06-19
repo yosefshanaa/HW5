@@ -152,6 +152,20 @@
 
 ---
 
+## Phase 10 — F5 per-layer timeline capture v1.11 (2026-06-20)
+
+| # | Task | Status | Outcome |
+|---|---|---|---|
+| 10.1 | Real per-layer load/compute capture — `sdk/metrics/airllm_instrument.py` | ☑ | Monkey-patches AirLLM MLX `MlxModelPersister.load_model` + `TransformerBlock.__call__`; `mx.eval` forces real disk read / forward per layer |
+| 10.2 | Wire capture into `airllm-demo` → persist `results/layer_timeline.json` | ☑ | Real run on Apple M3 Pro: 22 TinyLlama layers, **I/O fraction 70%** (mean 14.7 ms load vs 6.3 ms compute) |
+| 10.3 | Replace hardcoded `f5_layer_timeline([])` in `benchmark_pipeline.py` with JSON read; `[]` fallback kept | ☑ | F5 now driven by measured data |
+| 10.4 | `report_builder` regenerates F5 PNG + honest measured caption/blurb via `_report_figs.render_f5` | ☑ | §7 shows real bars (not "No timeline data") + measured I/O fraction |
+| 10.5 | Unit tests: capture correlation, JSON read/write, `io_fraction`, F5 render, demo wiring | ☑ | 183 tests, 87.96% coverage; new modules 97–100% |
+| 10.6 | Quality gate: ruff clean, pytest ≥85%, all files ≤150 lines | ☑ | 0 violations; 87.96%; max 150 lines |
+| 10.7 | Docs + version bump (CHANGELOG v1.11, TODO Phase 10, `version.py` → 1.11) | ☑ | This section |
+
+---
+
 ## Standing reminders (Do / Don't — from exercise + guidelines)
 
 **Do:** uv venv with pinned non-newest Python · start small + start at Q2 · low `max_new_tokens` · ensure disk space (dry-run) · set `layer_shards_saving_path` off the system root · use AirLLM `AutoModel` · ≥3 reps · cite sources/dates.

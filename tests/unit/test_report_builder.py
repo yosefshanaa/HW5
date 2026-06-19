@@ -37,6 +37,7 @@ def test_main_creates_readme(tmp_path):
         patch.object(report_builder, "ROOT", tmp_path),
         patch.object(report_builder, "RESULTS", tmp_path / "results"),
         patch.object(report_builder, "ASSETS", tmp_path / "assets"),
+        patch.object(report_builder, "render_f5", return_value=("F5 — caption", "")),
     ):
         (tmp_path / "results").mkdir()
         (tmp_path / "assets").mkdir()

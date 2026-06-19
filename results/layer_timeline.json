@@ -1,0 +1,134 @@
+[
+  {
+    "layer": 0,
+    "load_ms": 17.144,
+    "compute_ms": 14.677,
+    "total_ms": 31.821
+  },
+  {
+    "layer": 1,
+    "load_ms": 17.578,
+    "compute_ms": 8.474,
+    "total_ms": 26.052
+  },
+  {
+    "layer": 2,
+    "load_ms": 18.412,
+    "compute_ms": 4.969,
+    "total_ms": 23.381
+  },
+  {
+    "layer": 3,
+    "load_ms": 17.787,
+    "compute_ms": 6.873,
+    "total_ms": 24.66
+  },
+  {
+    "layer": 4,
+    "load_ms": 18.463,
+    "compute_ms": 4.944,
+    "total_ms": 23.408
+  },
+  {
+    "layer": 5,
+    "load_ms": 13.614,
+    "compute_ms": 5.212,
+    "total_ms": 18.826
+  },
+  {
+    "layer": 6,
+    "load_ms": 14.206,
+    "compute_ms": 5.172,
+    "total_ms": 19.377
+  },
+  {
+    "layer": 7,
+    "load_ms": 13.831,
+    "compute_ms": 5.513,
+    "total_ms": 19.344
+  },
+  {
+    "layer": 8,
+    "load_ms": 13.68,
+    "compute_ms": 5.476,
+    "total_ms": 19.155
+  },
+  {
+    "layer": 9,
+    "load_ms": 14.033,
+    "compute_ms": 7.23,
+    "total_ms": 21.263
+  },
+  {
+    "layer": 10,
+    "load_ms": 13.722,
+    "compute_ms": 4.826,
+    "total_ms": 18.549
+  },
+  {
+    "layer": 11,
+    "load_ms": 13.916,
+    "compute_ms": 4.944,
+    "total_ms": 18.86
+  },
+  {
+    "layer": 12,
+    "load_ms": 13.551,
+    "compute_ms": 7.568,
+    "total_ms": 21.119
+  },
+  {
+    "layer": 13,
+    "load_ms": 13.484,
+    "compute_ms": 7.368,
+    "total_ms": 20.853
+  },
+  {
+    "layer": 14,
+    "load_ms": 13.605,
+    "compute_ms": 6.659,
+    "total_ms": 20.264
+  },
+  {
+    "layer": 15,
+    "load_ms": 13.452,
+    "compute_ms": 4.81,
+    "total_ms": 18.262
+  },
+  {
+    "layer": 16,
+    "load_ms": 13.674,
+    "compute_ms": 4.914,
+    "total_ms": 18.588
+  },
+  {
+    "layer": 17,
+    "load_ms": 13.684,
+    "compute_ms": 5.013,
+    "total_ms": 18.697
+  },
+  {
+    "layer": 18,
+    "load_ms": 13.655,
+    "compute_ms": 5.514,
+    "total_ms": 19.169
+  },
+  {
+    "layer": 19,
+    "load_ms": 13.498,
+    "compute_ms": 5.486,
+    "total_ms": 18.984
+  },
+  {
+    "layer": 20,
+    "load_ms": 14.027,
+    "compute_ms": 7.825,
+    "total_ms": 21.852
+  },
+  {
+    "layer": 21,
+    "load_ms": 13.528,
+    "compute_ms": 5.726,
+    "total_ms": 19.255
+  }
+]

@@ -4,7 +4,7 @@ from airllm_local_lab.shared.version import __version__
 
 
 def test_version_string():
-    assert __version__ == "1.10"
+    assert __version__ == "1.11"
 
 
 def test_version_is_string():

@@ -10,8 +10,6 @@ from airllm_local_lab.shared.logging import get_logger
 
 log = get_logger(__name__)
 
-_LAYER_EVENTS: list[dict] = []
-
 
 class AirLLMBackend:
     name = "airllm"
@@ -61,7 +59,6 @@ class AirLLMBackend:
         if self._model is None or self._tokenizer is None:
             raise RuntimeError("Not loaded — call load() first")
 
-        _LAYER_EVENTS.clear()
         t0 = time.perf_counter()
 
         # On macOS, AirLLM uses the MLX backend which expects an MLX array input.

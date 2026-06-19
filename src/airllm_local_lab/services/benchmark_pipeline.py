@@ -10,6 +10,7 @@ from pathlib import Path
 
 import torch
 
+from airllm_local_lab.sdk.metrics.airllm_instrument import read_timeline
 from airllm_local_lab.sdk.model_loader.airllm_backend import AirLLMBackend
 from airllm_local_lab.sdk.viz import plots
 from airllm_local_lab.services._benchmark_helpers import _run_single, _summarise_reps
@@ -121,5 +122,5 @@ def main() -> None:
         plots.f2_latency(ok_rows)
         plots.f3_throughput(ok_rows)
         plots.f4_quality_vs_memory(ok_rows)
-    plots.f5_layer_timeline([])
+    plots.f5_layer_timeline(read_timeline(RESULTS / "layer_timeline.json"))
     log.info("Figures saved to assets/")

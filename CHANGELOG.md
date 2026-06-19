@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.11] — 2026-06-20
+
+### Added — F5 per-layer load-vs-compute timeline (real measured data)
+- **`sdk/metrics/airllm_instrument.py`** — `capture_layer_timeline()` context manager monkey-patches AirLLM's MLX backend at two hot spots: `MlxModelPersister.load_model` (per-layer shard disk stream → `load_ms`) and `TransformerBlock.__call__` (per-layer forward → `compute_ms`). MLX's lazy graph is forced with `mx.eval` so each timed window captures the real disk read / matmuls. Only the first forward pass (prompt processing) is recorded — one clean sweep of every transformer layer. Also provides `write_timeline`/`read_timeline` (JSON persistence) and `io_fraction_of`.
+- **`services/_report_figs.py`** — `render_f5()` regenerates `assets/F5_layer_timeline.png` from the measured JSON and returns an honest, data-derived caption + §7 lead-in (mean load/compute per layer, measured I/O fraction).
+- New artifact: **`results/layer_timeline.json`** — captured live on Apple M3 Pro (TinyLlama-1.1B, 22 layers): mean **14.7 ms disk-load** vs **6.3 ms forward compute** per layer → **I/O fraction 70%** (disk-I/O-bound, not compute-bound). Honours ADR-008: figures from measured data only.
+
+### Changed
+- `shared/version.py` → 1.11
+- `services/airllm_runner.py` — `run_airllm_demo()` now wraps generation in `capture_layer_timeline()` and writes `results/layer_timeline.json` (`uv run airllm-demo`).
+- `services/benchmark_pipeline.py` — replaced the hardcoded `plots.f5_layer_timeline([])` with a read of `results/layer_timeline.json` (empty-list fallback retained when absent).
+- `services/report_builder.py` — F5 figure regenerated + honest measured caption/blurb in §7 Benchmarking; footer date → 2026-06-20.
+- `sdk/model_loader/airllm_backend.py` — removed the unused `_LAYER_EVENTS` placeholder (superseded by the real recorder).
+- Docs updated: TODO Phase 10, this CHANGELOG entry.
+
+---
+
 ## [1.10] — 2026-06-18
 
 ### Added — Honesty gap closures (three real experiments)

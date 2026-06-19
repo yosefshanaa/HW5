@@ -1,5 +1,6 @@
 """Unit tests for services/airllm_runner.py — mocked AirLLM."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 from airllm_local_lab.sdk.model_loader.base import GenerationResult
@@ -43,3 +44,24 @@ def test_run_airllm_demo_with_compression(tmp_path):
 
     call_kwargs = mock_cls.call_args[1]
     assert call_kwargs.get("compression") == "4bit"
+
+
+def test_run_airllm_demo_writes_timeline(tmp_path):
+    mock_result = GenerationResult(text="ok", num_tokens=1)
+    out = tmp_path / "layer_timeline.json"
+
+    with patch("airllm_local_lab.services.airllm_runner.AirLLMBackend") as mock_cls:
+        instance = MagicMock()
+        instance.generate.return_value = mock_result
+        mock_cls.return_value = instance
+
+        run_airllm_demo(
+            model_id="fake/model",
+            shards_path=str(tmp_path),
+            token=None,
+            max_new_tokens=1,
+            timeline_out=out,
+        )
+
+    assert out.exists()
+    assert isinstance(json.loads(out.read_text()), list)
