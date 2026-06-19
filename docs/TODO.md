@@ -141,14 +141,14 @@
 | # | Task | Status | Outcome |
 |---|---|---|---|
 | 9.1 | Ollama GGUF precision sweep — `services/quant_sweep_ollama.py` (`sweep-ollama`) | ☑ | Q8_0=92 tok/s, Q4_K_M=133 tok/s, Q2_K=145 tok/s; `results/quant_sweep_ollama.json/csv` |
-| 9.2 | Giant model AirLLM proof — `services/giant_proof.py` (`giant-proof`) | ⏳ | Download of `huggyllama/llama-13b` (26 GB) in progress; OOM + streaming to `results/giant_proof.json` |
+| 9.2 | Giant model AirLLM proof — `services/giant_proof.py` (`giant-proof`) | ☑ | Direct-load OOM confirmed (26 GB FP16 > 19.3 GB RAM, 21.1 GB gap, 180 s timeout); AirLLM streaming peak RAM 274 MB ≪ 26 GB → `results/giant_proof.json` |
 | 9.3 | Empirical TPOT/ITL sweep — `services/tpot_sweep.py` (`tpot-sweep`) | ☑ | AirLLM ITL = 1416 ms/token (linear fit, n=1,2,4,8); `results/tpot_sweep.json` |
 | 9.4 | Unit tests for all 3 new services (17 tests) | ☑ | 170 total tests, 87.58% coverage |
 | 9.5 | Report builder + KPI scorecard + section_models updated | ☑ | Real measured values; TPOT=0 placeholder removed |
 | 9.6 | Docs updated (PLAN ADR-002/004 revised, ADR-009 added; TODO Phase 9; CHANGELOG v1.10) | ☑ | All honesty gaps documented |
 | 9.7 | Quality gate: ruff clean, pytest ≥85%, all files ≤150 lines | ☑ | 0 violations; 87.58%; max 150 lines |
-| 9.8 | Run `uv run giant-proof` and update `results/giant_proof.json` | ⏳ | Awaiting 26 GB download |
-| 9.9 | Commit and push v1.10 to main | ⏳ | After giant-proof completes |
+| 9.8 | Run `uv run giant-proof` and update `results/giant_proof.json` | ☑ | Honest negative result: `huggyllama/llama-13b` is LLaMA-**1**; `AirLLMLlamaMlx` expects LLaMA-2 layout (`rotary_emb` absent) — documented in commit 2cc8cbf |
+| 9.9 | Commit and push v1.10 to main | ☑ | v1.10 shipped; v1.11 (F5 timeline capture) now on main |
 
 ---
 

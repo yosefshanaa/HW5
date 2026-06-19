@@ -35,6 +35,8 @@ def render_f5(results_dir: Path) -> tuple[str, str]:
         f"layer-streaming run on the Apple M3 Pro — all {len(dicts)} TinyLlama-1.1B "
         f"layers, mean **{mean_load:.1f} ms disk-load** vs **{mean_compute:.1f} ms forward "
         f"compute** per layer. Disk I/O is **{pct}%** of per-layer wall-time, confirming the "
-        "run is I/O-bound, not compute-bound (ADR-008: figures from measured data only).\n\n"
+        "run is I/O-bound, not compute-bound. The first few layers carry one-time MLX kernel "
+        "JIT-compilation that slightly inflates their compute bars, so the true steady-state "
+        "I/O share is even higher than shown (ADR-008: figures from measured data only).\n\n"
     )
     return caption, blurb

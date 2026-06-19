@@ -243,7 +243,7 @@ Peak RAM:   1066 MB
 
 **Cold vs warm:** rep 1 (cold) = 27.099 s · reps 2-3 (warm) avg = 28.165 s · warm is -3.9% faster. The OS page cache retains shard pages in kernel memory — quantified in Extension E3.
 
-**Measured per-layer timeline (F5):** captured live during the AirLLM MLX layer-streaming run on the Apple M3 Pro — all 22 TinyLlama-1.1B layers, mean **14.7 ms disk-load** vs **6.3 ms forward compute** per layer. Disk I/O is **70%** of per-layer wall-time, confirming the run is I/O-bound, not compute-bound (ADR-008: figures from measured data only).
+**Measured per-layer timeline (F5):** captured live during the AirLLM MLX layer-streaming run on the Apple M3 Pro — all 22 TinyLlama-1.1B layers, mean **14.7 ms disk-load** vs **6.3 ms forward compute** per layer. Disk I/O is **70%** of per-layer wall-time, confirming the run is I/O-bound, not compute-bound. The first few layers carry one-time MLX kernel JIT-compilation that slightly inflates their compute bars, so the true steady-state I/O share is even higher than shown (ADR-008: figures from measured data only).
 
 ![F5 — Measured per-layer load vs compute timeline (TinyLlama-1.1B · AirLLM MLX streaming · Apple M3 Pro · 22 layers · load = 70% of wall-time → disk-I/O-bound)](assets/F5_layer_timeline.png)
 *F5 — Measured per-layer load vs compute timeline (TinyLlama-1.1B · AirLLM MLX streaming · Apple M3 Pro · 22 layers · load = 70% of wall-time → disk-I/O-bound)*

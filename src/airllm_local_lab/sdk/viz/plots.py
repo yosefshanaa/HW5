@@ -101,13 +101,15 @@ def f5_layer_timeline(layer_dicts: list[dict]) -> Path:
     layers = [d["layer"] for d in layer_dicts]
     load_ms = [d["load_ms"] for d in layer_dicts]
     compute_ms = [d["compute_ms"] for d in layer_dicts]
+    wall = sum(load_ms) + sum(compute_ms)
+    io_pct = round(100 * sum(load_ms) / wall) if wall else 0
 
     fig, ax = plt.subplots(figsize=(max(10, len(layers) // 2), 4))
     ax.bar(layers, load_ms, label="Load (ms)", color="tomato")
     ax.bar(layers, compute_ms, bottom=load_ms, label="Compute (ms)", color="steelblue")
     ax.set_xlabel("Layer index")
     ax.set_ylabel("Time (ms)")
-    ax.set_title("F5 — Per-layer timeline (I/O-bound pattern)")
+    ax.set_title(f"F5 — Per-layer load vs compute ({io_pct}% disk I/O → I/O-bound)")
     ax.legend()
     fig.tight_layout()
     return _save(fig, "F5_layer_timeline.png")
